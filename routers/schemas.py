@@ -34,6 +34,7 @@ class Comment(BaseModel):
     class Config():
         orm_mode = True
 
+     
 class PostDisplay(BaseModel):
     id: int
     image_url: str
@@ -50,8 +51,7 @@ class UserAuth(BaseModel):
     username: str
     email: str
 
-
 class CommentBase(BaseModel):
     username: str
     text: str
-    post_id: str
+    post_id: int
