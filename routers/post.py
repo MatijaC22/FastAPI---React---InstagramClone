@@ -4,7 +4,7 @@ from sqlalchemy.orm.session import Session
 from db.database import get_db
 from fastapi.exceptions import  HTTPException
 from db import db_post
-from typing import List
+from typing import List, Optional
 import random
 import string
 import shutil
@@ -33,6 +33,10 @@ def create(request: PostBase, db: Session = Depends(get_db), current_user: UserA
 def posts(db: Session = Depends(get_db)):
    return db_post.get_all(db)
 
+@router.get('/package', response_model=List[PostDisplay])
+def posts(page: int = 1, per_page: int = 10, user_id: Optional[int] = None, db: Session = Depends(get_db)):
+   return db_post.get_all_package(db, user_id, page, per_page)
+
 @router.post('/image')
 def upload_image(image: UploadFile = File(...), current_user: UserAuth = Depends(get_current_user)):
    letters = string.ascii_letters
@@ -45,6 +49,11 @@ def upload_image(image: UploadFile = File(...), current_user: UserAuth = Depends
       shutil.copyfileobj(image.file, buffer)
       return {'filename': path}
    
+
+@router.get('/{id}')
+def post(id: int, db: Session = Depends(get_db)):
+   return db_post.get_one(db, id)
+
 
 @router.post('/delete/{id}')
 def delete(id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):

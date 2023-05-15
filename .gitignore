@@ -6,3 +6,6 @@ build/
 
 # ignore a file called "secrets.json"
 secrets.json 
+
+
+venv/

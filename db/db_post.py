@@ -20,6 +20,22 @@ def create(db: Session, request: PostBase):
 def get_all(db: Session):
     return db.query(DbPost).all()
 
+def get_all_package(db: Session, user_id=None, page: int = 1, per_page: int = 10):
+    offset = (page - 1) * per_page
+    query = db.query(DbPost)
+    if user_id:
+        query = query.filter(DbPost.user_id == user_id)
+    query = query.order_by(DbPost.timestamp.desc()).offset(offset).limit(per_page).all()
+    return query
+
+def get_one(db: Session, id: int):
+    post = db.query(DbPost).filter(DbPost.id == id).first()
+    if not post:
+        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,
+                            detail = f"post with id {id} not found")
+    return post
+
+
 def delete(db: Session, id: int, user_id: int):
     post = db.query(DbPost).filter(DbPost.id == id).first()
     if not post:
