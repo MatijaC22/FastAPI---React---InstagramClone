@@ -1,6 +1,6 @@
 <template>
 <v-main>
-  <v-container fluid class="pa-1">
+  <v-container fluid class="pa-1 mt-3">
     <v-card class="pa-1" elevation="2" style="background-image: linear-gradient(to top right, rgba(19,84,122,.8), rgba(128,208,199,.8)), url('../src/assets/images/background3.jpg'); background-size: cover;">
 
     <div class="clocks-container" :style="mdAndUp ? 'display: flex; align-items: center;' : ''">
@@ -108,6 +108,7 @@ import Auth from '@/components/Auth.vue';
 import { useDisplay } from 'vuetify'
 import { defineComponent } from 'vue';
 
+import axios from 'axios'
 
 export default defineComponent({
   name: 'HomeView',
@@ -117,6 +118,7 @@ export default defineComponent({
   data() {
     const { xs, mdAndUp, smAndDown } = useDisplay()
     return {
+
       test:true,
       message: "",
       GUAsecDeg: -90,
@@ -148,14 +150,14 @@ export default defineComponent({
       const optionsGUA = { timeZone: 'America/Guatemala' };
       this.guatemalaTime = date.toLocaleString('en-US', optionsGUA);
       this.GUAsecDeg = (date.getSeconds() / 60) * 360 - 90;
-      this.GUAminDeg = (date.getMinutes() / 60) * 360 - 90;
-      this.GUAhourDeg = (date.getHours() / 12) * 360 - 90;
+      this.GUAminDeg = (date.getMinutes() / 60) * 360 + 90; // -90
+      this.GUAhourDeg = (date.getHours() / 12) * 360 - 60; //- 90
 
       const optionsBEL = { timeZone: 'Europe/Brussels' };
       this.belgiumTime = date.toLocaleString('en-US', optionsBEL);
       this.BELsecDeg = ((date.getSeconds() + new Date().getTimezoneOffset()*60) / 60) * 360 - 90;
       this.BELminDeg = ((date.getMinutes() + new Date().getTimezoneOffset()) / 60) * 360 - 90;
-      this.BELhourDeg = ((date.getHours() + new Date().getTimezoneOffset()/60) / 12) * 360 - 90;
+      this.BELhourDeg = ((date.getHours() + new Date().getTimezoneOffset()/60) / 12) * 360 - 30; //-90
     }, 1000);
   },
 });

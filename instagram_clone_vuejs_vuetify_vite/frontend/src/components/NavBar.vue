@@ -28,11 +28,26 @@
               Home
         </v-tab>
       </router-link>
-      <router-link to="/PostsList" class="routerLink">
-        <v-tab :value="2">
-              Posts
-        </v-tab>
-      </router-link>
+      <v-tab :value="2" id="menu-activator-posts">
+        Posts
+        <v-menu activator="#menu-activator-posts" > 
+          <v-list style="border-top-left-radius: 0; border-top-right-radius: 0;">
+            <v-list-item
+              v-for="item in navBarDataPosts"
+              :key="item.title"
+              :value="item.title"
+              :to="item.value"
+            >
+              <v-list-item-title style="font-size:13px;">{{ item.title }}</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="this.showInsertOrUpdateDialog({}, 'insert')"
+                        style="border-top-left-radius: 0; border-top-right-radius: 0;"
+            >
+              <v-list-item-title style="font-size:13px;">INSERT</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-tab>
       <v-tab :value="3"  id="menu-activator">
         Data
         <v-menu activator="#menu-activator" > 
@@ -48,18 +63,21 @@
           </v-list>
         </v-menu>
       </v-tab>
+      <router-link to="/PriceCalculator" class="routerLink">
+        <v-tab :value="4">
+          Calculate
+        </v-tab>
+      </router-link>
     </v-tabs>
           
 
     <v-spacer v-if="mdAndUp"></v-spacer>    
           
-          
     <v-btn icon v-if="smAndDown" @click="searchBarVisible = !searchBarVisible">
-      <v-icon @click=onItemClick(1)>mdi-magnify</v-icon>
+      <v-icon>mdi-magnify</v-icon>
     </v-btn>
-    <!-- <v-text-field v-if="mdAndUp"  variant="solo" style="margin-top:10px; padding-top:12px; " ></v-text-field> -->
     <v-text-field
-    v-if="mdAndUp" 
+      v-if="mdAndUp" 
       :loading="loading"
       density="compact"
       variant="solo"
@@ -67,11 +85,18 @@
       append-inner-icon="mdi-magnify"
       single-line
       hide-details
+      v-model="search"
       @click:append-inner="onClick"
+      @keyup.enter="onClick"
     ></v-text-field>
           
-  
 
+    <!-- NOTIFICATIONS -->
+    <div class="overflow-y-visible ml-1">
+      <NotificationTab/>
+    </div>
+
+    <!-- USER INFO FALLING TAB -->
     <div class="overflow-y-visible">
       <v-menu>
         <template v-slot:activator="{ props }">
@@ -80,23 +105,25 @@
           </v-btn>
         </template>
   
+        
         <v-list>
           <v-list-item
-            prepend-avatar="../src/assets/images/matija.jpg"
-            title="Matija Corak"
-            to="/user/1?part=info"
+            :prepend-avatar="this.BASE_URL+'images/users/'+userData.image_url"
+            :title="this.userData.name.toUpperCase()+' '+this.userData.last_name.toUpperCase()"
+            :to="`/user/${userData.id}?part=info`"
           ></v-list-item>
 
           <v-divider></v-divider>
   
           <v-list density="compact" nav>
-            <v-list-item to="/user/1?part=info" prepend-icon="mdi-view-dashboard" title="User Info" value="User Info"></v-list-item>
-            <v-list-item to="/user/1?part=posts" prepend-icon="mdi-forum" title="User Posts" value="User Posts"></v-list-item>
+            <v-list-item :to="`/user/${userData.id}?part=info`" prepend-icon="mdi-view-dashboard" title="User Info" value="User Info"></v-list-item>
+            <v-list-item :to="`/user/${userData.id}?part=posts`" prepend-icon="mdi-forum" title="User Posts" value="User Posts"></v-list-item>
             <v-list-item title="Language" value="Language">
               <template v-slot:prepend>
                 <v-avatar image="../src/assets/images/ES.png" size="24" class="mr-8"></v-avatar>
               </template>
             </v-list-item>
+            <v-list-item @click="logout" prepend-icon="mdi-logout" to='/' title="Log out" value="Log out"></v-list-item>
           </v-list>
         </v-list>
       </v-menu>
@@ -104,7 +131,7 @@
   </v-app-bar>
 
 
-        
+    <!-- SEARCH BAR IN SMALL DEVICE MODE  -->
   <v-text-field
   v-if="smAndDown && searchBarVisible" 
     :loading="loading"
@@ -115,11 +142,13 @@
     class="search-bar"
     single-line
     hide-details
+    v-model="search"
     @click:append-inner="onClick"
+    @keyup.enter="onClick"
   ></v-text-field>
 
 
-
+  <!-- NAVBAR SMALL DEVICE -->
   <v-navigation-drawer
     v-model="openNavBar"
     location="left"
@@ -159,41 +188,60 @@
 
 
       </v-list-group>
+      <v-list-item prepend-icon="mdi-plus" title="Calculate" to="/PriceCalculator"></v-list-item>
     </v-list>  
   </v-navigation-drawer>
+
+
+  <InsertOrUpdateDialog 
+    :insertOrUpdateDialog="insertOrUpdateDialog"
+    @update:insertOrUpdateDialog="insertOrUpdateDialog = $event"
+    :insertOrUpdateDialogItem="insertOrUpdateDialogItem"
+    @insertOrUpdateItem="handleInsertOrUpdateItem"
+    type="POSTS" typeOfDialog="insert"
+  />
 </template>
 
 <script>
+import InsertOrUpdateDialog from '@/components/InsertOrUpdateDialog.vue'
+
+import axios from 'axios'
 import { useDisplay } from 'vuetify'
 import { defineComponent } from 'vue'
 
-
 import { useCounterStore } from '@/stores/counter';
 import { mapWritableState } from 'pinia'
+import { mapState } from 'pinia'
+
+import NotificationTab from '@/components/NotificationTab.vue'
 
 export default defineComponent({
+  components:{
+    InsertOrUpdateDialog,
+    NotificationTab,
+  },
   data() {
     const { xs, mdAndUp, smAndDown } = useDisplay()
     return {
+
+      insertOrUpdateDialog: false,
+      insertOrUpdateDialogItem:{},
+
+
       searchBarVisible: false,
       drawer: null,
       openNavBar: null,
       // tab: null,
       loaded: false,
       loading: false,
+      userData:JSON.parse(localStorage.getItem('userData')),
+      search:'',
+      test:[],
       open: ['Users'],
       data: [
         ['Containers', 'mdi-file-outline', '/database/containers'],
         ['Employes', 'mdi-plus-outline', '/database/employes'],
-      ],
-      // cruds: [
-      //   ['Show All', 'mdi-account-multiple-outline'],
-      //   ['Insert', 'mdi-cog-outline'],
-      //   ['Create', 'mdi-plus-outline'],
-      //   ['Read', 'mdi-file-outline'],
-      //   ['Update', 'mdi-update'],
-      //   ['Delete', 'mdi-delete'],
-      // ],      
+      ],    
       navBarMain: [
         {
           title: 'Home',
@@ -228,26 +276,70 @@ export default defineComponent({
           icon: 'mdi-folder'
         },
       ],
+      navBarDataPosts: [
+        {
+          title: 'ALL',
+          value: '/PostsList',
+          icon: 'mdi-folder'
+        },
+      ],
       xs, mdAndUp, smAndDown
     }
   },
   methods: {
-    onItemClick(item) {
-      // Handle the click event on the dropdown menu item
-      console.log(`Clicked ${this.searchBarVisible}${this.smAndDown}`);
+    showInsertOrUpdateDialog(item,typeOfDialog){
+      this.typeOfDialog = typeOfDialog;
+      this.insertOrUpdateDialogItem = item;
+      this.insertOrUpdateDialog = true;
     },
-    onClick () {
-      this.loading = true
+    handleInsertOrUpdateItem(item) {
+      // Do something with item here
+      console.log(this.typeOfDialog);
+      console.log(this.insertOrUpdateDialogItem);
+      console.log(item);
+      window.location.reload();
+    },
 
-      setTimeout(() => {
-        this.loading = false
-        this.loaded = true
-      }, 2000)
-    }
+    async onClick () {
+      await axios.get(this.BASE_URL + 'search/post/'+this.search,
+        {
+          headers: {
+            'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+            'Accept': 'application/json'
+          }
+        })
+        .then(response => {
+          console.log('this is search.', response);
+          this.test = response.data  
+        })
+        .catch(error => {
+          console.error('There was an error:', error.response.data);
+          if(error.response.data.detail == 'Could not validate credentials'){
+            this.logout()          
+          }
+        });
+    },
+    logout (){
+      this.userLoggedIn = false
+      this.setAuthToken = null
+      this.setAuthTokenType = null
+      this.setUserId = null
+      this.setUsername = null
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('email');
+    },
   },
   computed:{
-    ...mapWritableState(useCounterStore, ['tab']),
-  }
+    ...mapState(useCounterStore, ['BASE_URL']),
+    ...mapWritableState(useCounterStore, [
+      'tab',
+      'userLoggedIn',
+      'setAuthToken',
+      'setAuthTokenType',
+      'setUserId',
+      'setUsername'
+    ]),
+  },
 })
 </script>
 

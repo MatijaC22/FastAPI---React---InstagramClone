@@ -83,7 +83,10 @@ export default {
 
       this.login_alert_variant = 'color: white; background-color:#339933; border: 1px solid #339933; box-shadow: 0 0 5px rgba(0,255,0,.3), 0 0 10px rgba(0,255,0,.2), 0 0 15px rgba(0,255,0,.1), 0 1px 0 #339933;';
       this.login_alert_msg = 'Success! You are now logged in.';
-      window.location.reload();
+      
+      this.$router.push('/').then(() => {
+        window.location.reload();
+      });
     },
   },
   computed:{

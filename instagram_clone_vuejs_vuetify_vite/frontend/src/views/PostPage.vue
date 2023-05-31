@@ -1,9 +1,10 @@
 <template>
 <v-main>
-  <v-container fluid class="pa-1">
+  <v-container fluid class="pa-1 mt-3">
     <v-card class="pa-1" elevation="2" style="background-image: linear-gradient(to top right, rgba(19,84,122,.8), rgba(128,208,199,.8)), url('../src/assets/images/background3.jpg'); background-size: cover;">
       <v-row justify="center" style="padding-top:12px;">
         <v-card
+          v-if="post.id != undefined"
           :key="post.id"
           border
           class="mb-4"
@@ -12,10 +13,10 @@
           style="background-color:white;"
           width="800"
         >
-          <v-list-item :title="post.caption" :subtitle="'Ref: ' + post.id" value="Card details">
+          <v-list-item :title="post.user.name.toUpperCase() + ' ' + post.user.last_name.toUpperCase()" :subtitle="'Ref: ' + post.reference_number" value="Card details">
             <template v-slot:prepend>
-              <router-link :to="'/user/' + post.id + '?part=info'" @click="tab=0">
-                <v-avatar image="https://randomuser.me/api/portraits/women/10.jpg" :to="'/user/' + post.userId + '?part=info'" size="38" class="mr-4"></v-avatar>
+              <router-link :to="'/user/' + post.user.id + '?part=info'" @click="tab=0">
+                <v-avatar :image="this.BASE_URL+'images/users/'+post.user.image_url" :to="'/user/' + post.userId + '?part=info'" size="38" class="mr-4"></v-avatar>
               </router-link>
             </template>
           </v-list-item>
@@ -28,8 +29,8 @@
             
           >
             <v-carousel-item
-              v-for="(slide, i) in [post.image_url, post.image_url]"
-              :src="post.image_url_type == 'relative' ? 'http://localhost:8000/'+slide : slide"
+              v-for="(slide, i) in post.image_url.split(',').slice(0, -1)"
+              :src="this.BASE_URL+'images/posts/'+post.reference_number+'/'+slide"
               :key="i"
               style="object-fit: contain; object-position: center; background-color:black;"
             >
@@ -37,7 +38,7 @@
           </v-carousel>
 
           <v-card-text>
-            {{post.caption}}
+            {{post.description}}
           </v-card-text>
 
           <v-card border
@@ -50,19 +51,20 @@
               <v-timeline density="compact" align="start" >
                 <v-timeline-item
                   v-for="comment in comments"
-                  :key="comment.timestamp"
-                  :dot-color="comment.username ==  username ? 'deep-purple-lighten-1' : 'green'"
+                  :key="comment.id"
+                  :dot-color="comment.email ==  email ? 'deep-purple-lighten-1' : 'green'"
                   size="x-small"
                 >
 
                   <div>
                     <div class="mb-4">
                       <div class="font-weight-normal">
-                        <strong>{{ comment.username }}</strong> -- Date: {{ formatDate(comment.timestamp) }}
+                        <strong>{{ comment.name }} {{ comment.last_name }}</strong>
+                         | {{ comment.email }} | Date: {{ formatDate(comment.last_modify) }} 
                       </div>
                       <div>{{ comment.text }}</div>
                     </div>
-                    <v-btn v-if="comment.username == username" icon size="small" @click="deleteComment(comment)">
+                    <v-btn v-if="comment.email == email" icon size="small" @click="deleteComment(comment)">
                       <v-icon>mdi-delete</v-icon>
                     </v-btn>
                   </div>
@@ -70,15 +72,12 @@
                 </v-timeline-item>
               </v-timeline>
             </v-card-text>
-            
-            <!-- <v-text-field v-model="message" label="Add Comment" prepend-icon="mdi-message" class="ml-8 mr-12"></v-text-field>
-            <v-btn @click="uploadFile">Upload</v-btn> -->
              <v-row >
               <v-col cols="8" class="pl-10 pr-0">
                 <v-text-field v-model="message" label="Add Comment" prepend-icon="mdi-message" ></v-text-field>
               </v-col>
               <v-col cols="4">
-                <v-btn @click="uploadFile" color="primary" height="56">Upload</v-btn>
+                <v-btn @click="LeaveComment" color="primary" height="56">Comment</v-btn>
               </v-col>
             </v-row>
           </v-card>
@@ -94,56 +93,68 @@
           max-width="800"
         >
 
-          <v-card-text class="overflow-y-auto ml-8 pa-0" style="height:200px;">
+          <v-card-text class="overflow-y-auto ml-8 pa-0" style="height:200px;" v-if="containerInfo != undefined">
             <v-simple-table >
               <tbody>
                 <tr>
                   <td><strong>Ref:</strong></td>
-                  <td>1323</td>
+                  <td>{{containerInfo.reference_number}}</td>
                 </tr>
                 <tr>
                   <td><strong>Country:</strong></td>
-                  <td>Guatemala</td>
+                  <td>{{containerInfo.country}}</td>
                 </tr>
                 <tr>
                   <td><strong>Size:</strong></td>
-                  <td>23</td>
+                  <td>23 - manual import</td>
                 </tr>
                 <tr>
                   <td><strong>Weight:</strong></td>
-                  <td>88</td>
+                  <td>88 - manual import</td>
                 </tr>
                 <tr>
                   <td><strong>Client:</strong></td>
-                  <td>Mali Losinj</td>
+                  <td>{{containerInfo.client_name}}</td>
                 </tr>
                 <tr>
-                  <td><strong>Client country:</strong></td>
-                  <td>Russia</td>
+                  <td><strong>Country:</strong></td>
+                  <td>{{containerInfo.country}}</td>
                 </tr>
                 <tr>
                   <td><strong>Delivery:</strong></td>
-                  <td>21/12/2025</td>
+                  <td>21/12/2025 - manual import</td>
                 </tr>
                 <tr>
                   <td><strong>Delivery Company:</strong></td>
-                  <td>Meverick</td>
+                  <td>Meverick - manual import</td>
                 </tr>
                 <tr>
                   <td><strong>Delivery Type:</strong></td>
-                  <td>Trucks</td>
+                  <td>{{containerInfo.transport_type}}</td>
+                </tr>
+                <tr>
+                  <td><strong>Product Type:</strong></td>
+                  <td>{{containerInfo.product_type}}</td>
+                </tr>
+                <tr>
+                  <td><strong>Responsible Name:</strong></td>
+                  <td>{{containerInfo.responsible_name}}</td>
+                </tr>
+                <tr>
+                  <td><strong>Responsible Email:</strong></td>
+                  <td>{{containerInfo.responsible_email}}</td>
                 </tr>
                 <tr>
                   <td><strong>Location of Delivery:</strong></td>
-                  <td>Somalia</td>
+                  <td>Somalia - manual import</td>
                 </tr>
                 <tr>
                   <td><strong>Contact:</strong></td>
-                  <td>234 234 324234</td>
+                  <td>234 234 324234 - manual import</td>
                 </tr>
                 <tr>
                   <td><strong>Email:</strong></td>
-                  <td>tank@tank.com</td>
+                  <td>tank@tank.com - manual import</td>
                 </tr>
               </tbody>
             </v-simple-table>
@@ -152,29 +163,114 @@
           
           <template v-slot:actions>
             <v-btn color="primary" variant="text">See in Map</v-btn>
+
+            <v-btn color="primary" variant="text" @click="this.showInsertOrUpdateDialog(post, 'update')">Update</v-btn>
+
+            <!-- OVDJE STAVI ITEM DA BUDE SVE OD OVOG POSTA -->
+            <v-btn color="primary" variant="text" @click="this.showDeleteDialog(item)">Delete</v-btn>
           </template>
         </v-card>
       </v-row>               
     </v-card>      
   </v-container>
 </v-main>
+<DeleteDialog 
+    :deleteDialog="deleteDialog"
+    @update:deleteDialog="deleteDialog = $event"
+    :deleteDialogItem="deleteDialogItem"
+    @deleteItem="handleDeleteItem"
+  />
+  <InsertOrUpdateDialog 
+    :insertOrUpdateDialog="insertOrUpdateDialog"
+    @update:insertOrUpdateDialog="insertOrUpdateDialog = $event"
+    :insertOrUpdateDialogItem="insertOrUpdateDialogItem"
+    @insertOrUpdateItem="handleInsertOrUpdateItem"
+    type="Posts" typeOfDialog="update"
+  />
 </template>
 
 <script>
+import DeleteDialog from '@/components/DeleteItemDialog.vue'
+import InsertOrUpdateDialog from '@/components/InsertOrUpdateDialog.vue'
+
 import axios from 'axios'
 import { useCounterStore } from '@/stores/counter';
 import { mapState } from 'pinia'
+import { mapActions } from 'pinia'
 export default {
+  components:{
+    InsertOrUpdateDialog,
+    DeleteDialog,
+  },
   data() {
     return{
+      deleteDialog: false,
+      deleteDialogItem:{},
+      insertOrUpdateDialog: false,
+      insertOrUpdateDialogItem:{},
+
       post:{},
       comments:[],
       file: null,
       message:'',
-      username:null
+      email:null,
+      containerInfo:null,
     }
   },
   methods:{
+    ...mapActions(useCounterStore, ['logout']),
+
+    showDeleteDialog(item) {
+      console.log('ssad')
+      this.deleteDialogItem = item;
+      this.deleteDialog = true;
+      console.log(this.deleteDialog)
+    },
+    handleDeleteItem(item) {
+      // Do something with item here
+      console.log('delete');
+      console.log(item);
+    },
+    showInsertOrUpdateDialog(item,typeOfDialog){
+      this.typeOfDialog = typeOfDialog;
+      this.insertOrUpdateDialogItem = item;
+      this.insertOrUpdateDialog = true;
+    },
+    handleInsertOrUpdateItem(item) {
+      // Do something with item here
+      console.log(this.typeOfDialog);
+      console.log(this.insertOrUpdateDialogItem);
+      console.log(item);
+      window.location.reload();
+    },
+    async LeaveComment() {
+      let data = {
+        "text": this.message,
+        "post_id": this.post.id,
+        "post_owner_email": this.post.user.email
+      }
+      console.log(data)
+
+      await axios.post(this.BASE_URL + 'comment', data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+        }
+      })
+        .then(response => {
+          console.log(response.data);
+          window.location.reload();
+
+        })
+        .catch(error => {
+          console.error(error);
+          if(error.response.data.detail == 'Could not validate credentials'){
+            this.logout()          
+          }
+        });
+    },
     async deleteComment(comment){
       
       console.log(localStorage.getItem('access_token'))
@@ -192,30 +288,9 @@ export default {
         })
         .catch(error => {
           console.error(error);
-        });
-    },
-    async uploadFile() {
-      let data = {
-        "text": this.message,
-        "username": 'matija@gmail.com',
-        "post_id": this.post.id
-      }
-      console.log(data)
-
-      await axios.post(this.BASE_URL + 'comment', data,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      })
-        .then(response => {
-          console.log(response.data);
-          window.location.reload();
-
-        })
-        .catch(error => {
-          console.error(error);
+          if(error.response.data.detail == 'Could not validate credentials'){
+            this.logout()          
+          }
         });
     },
     formatDate(timestamp) {
@@ -233,32 +308,53 @@ export default {
     ...mapState(useCounterStore, ['BASE_URL', 'setUsername'])
   },
   async created(){
-      this.username=localStorage.getItem('username')
+      this.email=localStorage.getItem('email')
     
       const url = window.location.href;
       const parts = url.split('/');
       const id = parts.pop()
 
-      await axios.get(this.BASE_URL + 'post/' + id)
+      await axios.get(this.BASE_URL + 'post/' + id,
+      {
+          headers: {
+            'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+            'Accept': 'application/json'
+          }
+      })
       .then(response => {
         console.log('this is post.', response);
         
         this.post = response.data  
-        this.post.caption = this.post.caption.toUpperCase()  
+        this.post.description = this.post.description.toUpperCase() 
+        
+        this.comments = response.data.comments
+        console.log(this.comments)
       })
       .catch(error => {
         console.error('There was an error:', error.response.data);
+        if(error.response.data.detail == 'Could not validate credentials'){
+          this.logout()          
+        }
       });
 
 
-      await axios.get(this.BASE_URL + 'comment/all/' + id)
+      await axios.get(this.BASE_URL + 'container/reference/' + this.post.reference_number,
+      {
+          headers: {
+            'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+            'Accept': 'application/json'
+          }
+      })
       .then(response => {
-        console.log('this is comments.', response);
+        console.log('this is container.', response);
         
-        this.comments = response.data  
+        this.containerInfo = response.data  
       })
       .catch(error => {
         console.error('There was an error:', error.response.data);
+        if(error.response.data.detail == 'Could not validate credentials'){
+          this.logout()          
+        }
       });
   }
 }

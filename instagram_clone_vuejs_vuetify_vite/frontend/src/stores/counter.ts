@@ -14,7 +14,10 @@ export const useCounterStore = defineStore({
   id: 'auth',
   state: () => ({
     isLoading: false,
-    authModalShow: true,
+
+    // SAD TESTIRAM SEARCHQUERY
+    searchQuery: null,
+
     userLoggedIn: false,
     setAuthToken:null,
     setAuthTokenType:null,
@@ -23,7 +26,8 @@ export const useCounterStore = defineStore({
     tab:null,
     BASE_URL: 'http://localhost:8000/',
     // BASE_URL: 'https://f09e-2402-4000-10c4-5e38-51f0-2970-8169-bc6c.ngrok-free.app/api/',
-    userData:null
+    userData:null,
+    testis:5,
   }),
   getters: {
     // setIsLoading: (state:any, status:any) => {
@@ -51,12 +55,14 @@ export const useCounterStore = defineStore({
       })
         .then(response => {
           console.log('Data was successfully submitted.', response);
-          this.setAuthToken = (<any>response).data.access_token
-          this.setAuthTokenType = (<any>response).data.token_type
-          this.setUserId = (<any>response).data.user_id
-          this.setUsername = (<any>response).data.username
+          // this.setAuthToken = (<any>response).data.access_token
+          // this.setAuthTokenType = (<any>response).data.token_type
+          // this.setUserId = (<any>response).data.user_id
+          // this.setUsername = (<any>response).data.username
           localStorage.setItem('access_token', response.data.access_token);
-          localStorage.setItem('username', response.data.username);
+          localStorage.setItem('email', response.data.user.email);
+          this.userData = (<any>response).data.user
+          localStorage.setItem('userData', JSON.stringify(this.userData));
           return 'Success'
 
           
@@ -68,42 +74,16 @@ export const useCounterStore = defineStore({
       
 
     },
-    async registerUser(login:any, password:any) {
-      // try {
-      //   this.userData = await api.post({ login, password })
-      //   showTooltip(`Welcome back ${this.userData.name}!`)
-      // } catch (error) {
-      //   showTooltip(error)
-      //   // let the form component display the error
-      //   return error
-      // }
+    logout(){
+      // KADA CREDENTIALS EXPIRED THROW USER OUT FORM WEBSITE
+      this.userLoggedIn = false
+      this.setAuthToken = null
+      this.setAuthTokenType = null
+      this.setUserId = null
+      this.setUsername = null
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('email');
     },
-    // increment() {
-    //   this.counter++
-    // }
   }
 })
-// export const useStore = defineStore({
-//   id: 'myStore',
-//   state: () => ({
-//     isLoading: false,
-//     authModalShow: true,
-//     userLoggedIn: false,
-//     BASE_URL: 'http://localhost:8000/'
-//   }),
-//   getters: {
-//     // Define your getters here
-//   },
-//   actions: {
-//     async login(payload) {
-//       // Define your actions here
-//     },
-//   },
-//   mutations: {
-//     setIsLoading(status) {
-//       this.isLoading = status
-//     },
-//     // Define your mutations here
-//   },
-//   // Define your modules here
-// })
+

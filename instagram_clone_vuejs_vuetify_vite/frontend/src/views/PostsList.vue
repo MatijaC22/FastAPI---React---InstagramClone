@@ -1,17 +1,19 @@
 <template>
 <v-main>
-  <v-container fluid class="pa-1">
+  <v-container fluid class="pa-1  mt-3">
     
     <v-card 
       class="pa-1" 
       elevation="2" 
       style="background-image: linear-gradient(to top right, rgba(19,84,122,.8), rgba(128,208,199,.8)), 
-                                url('../src/assets/images/background3.jpg'); 
+              url('../src/assets/images/background3.jpg'); 
               background-size: cover;
-              ">
+              min-height:100vh;">
+            
 
       <!-- <v-row justify="center" style="padding-top:12px;"> -->
-        <PostData :postList="postList"/>
+        <div v-if="postList.length == 0 && isLoading == false">YOU DONT HAVE POSTS</div>
+        <div v-else-if="postList.length != 0"><PostData :postList="postList"/></div>
       <!-- </v-row> -->
       <div class="is-loading-bar has-text-centered"  style="text-align:center;" v-bind:class="{'is-loading': this.isLoading }">
         <div class="lds-dual-ring"></div>
@@ -30,6 +32,7 @@ import PostData from '@/components/PostData.vue'
 import { useCounterStore } from '@/stores/counter';
 import { mapState } from 'pinia'
 import { mapWritableState } from 'pinia'
+import { mapActions } from 'pinia'
 
 
 export default defineComponent({
@@ -57,6 +60,8 @@ export default defineComponent({
     window.removeEventListener('scroll',this.handleScroll);
   },
   methods:{
+    ...mapActions(useCounterStore, ['logout']),
+
     handleScroll(){
       const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
       const bottomOfWindow = Math.round(scrollTop) + clientHeight === scrollHeight;
@@ -76,13 +81,22 @@ export default defineComponent({
 
       this.pendingRequest = true;
 
-      await axios.get(this.BASE_URL + 'post/all')
+      await axios.get(this.BASE_URL + 'post/package',
+        {
+          headers: {
+            'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+            'Accept': 'application/json'
+          }
+        })
         .then(response => {
           console.log('this is response.', response);
           this.postList = response.data     
         })
         .catch(error => {
           console.error('There was an error:', error.response.data);
+          if(error.response.data.detail == 'Could not validate credentials'){
+            this.logout()          
+          }
         });
 
         this.pendingRequest = false;

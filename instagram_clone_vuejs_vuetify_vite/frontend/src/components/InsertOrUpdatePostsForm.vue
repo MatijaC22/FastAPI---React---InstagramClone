@@ -1,77 +1,36 @@
 <template>
   <vee-form @submit="submitData" class="veeform">
 
-              <v-row>
-                <v-col cols="12" sm="6" md="4">
-                  <v-text-field
-                    label="Title*"
-                    v-model="Title"
-                    type="input"
-                    hide-details
-                  ></v-text-field>
-                  <span v-if="submitClicked && Title == ''" style="color:red;">{{TitleAlarm}}</span>
+    <v-row>
+      <v-col cols="12" sm="6" md="4">
+        <v-text-field
+          label="Description*"
+          v-model="Description"
+          type="input"
+          hide-details
+        ></v-text-field>
+        <span v-if="submitClicked && Description == ''" style="color:red;">{{DescriptionAlarm}}</span>
+      </v-col>
+      <v-col cols="12" sm="6" md="4">
+        <v-text-field
+          label="Reference*"
+          v-model="Reference"
+          type="input"
+          hide-details
+        ></v-text-field>
+        <span v-if="submitClicked && Reference == ''" style="color:red;">{{ReferenceAlarm}}</span>
+      </v-col>
+      <v-col cols="12" sm="6" md="4">
+        <v-file-input
+          multiple
+          label="Image"
+          accept="image/*"
+          v-model="selectedImages"
+        ></v-file-input>
+      </v-col>
+    </v-row>
 
-                </v-col>
-                <v-col cols="12" sm="6" md="4">
-                  <v-text-field
-                    label="Description*"
-                    v-model="Description"
-                    type="input"
-                    hide-details
-                  ></v-text-field>
-                  <span v-if="submitClicked && Description == ''" style="color:red;">{{DescriptionAlarm}}</span>
-                </v-col>
-                <v-col cols="12" sm="6" md="4">
-                  <v-select
-                    label="Reference*"
-                    v-model="Reference"
-                    :items="['23423324', 'sdsad23234', 'sc22423safs', 'sfsd324s']"
-                    hide-details
-                  ></v-select>
-                  <span v-if="submitClicked && !Reference.length" style="color:red;">{{ReferenceAlarm}}</span>
-                </v-col>
-                <!-- <v-col cols="12">
-                  <v-text-field
-                    label="Responsible Name*"
-                    v-model="ResponsableName"
-                    type="input"
-                    class="mt-4"
-                    hide-details
-                  ></v-text-field>
-                  <span v-if="submitClicked && ResponsableName == ''" style="color:red;">{{LocationAlarm}}</span>
-                </v-col>
-                <v-col cols="12">
-                  <v-text-field
-                    label="Client Name*"
-                    v-model="ClientName"
-                    type="input"
-                    hide-details
-                  ></v-text-field>
-                  <span v-if="submitClicked && ClientName == ''" style="color:red;">{{ClientNameAlarm}}</span>
-                </v-col>
-                <v-col cols="12" sm="6">
-                  <v-select
-                    label="Transport Type*"
-                    v-model="TransportType"
-                    :items="['Air', 'Land', 'Sea']"
-                    class="mt-4"
-                    hide-details
-                  ></v-select>
-                  <span v-if="submitClicked && !TransportType.length" style="color:red;">{{TransportTypeAlarm}}</span>
-                </v-col>
-                <v-col cols="12" sm="6" >
-                  <v-autocomplete
-                    :items="['Oil', 'Cooking Oil', 'Greese', 'Cleaning liquid']"
-                    label="Product Type*"
-                    v-model="ProductType"
-                    hint="enter type of the product"
-                    class="mt-4"
-                    multiple
-                    hide-details
-                  ></v-autocomplete>
-                  <span v-if="submitClicked && !ProductType.length" style="color:red;">{{ProductTypeAlarm}}</span>
-                </v-col> -->
-              </v-row>
+
     <v-btn 
       type="submit" 
       block 
@@ -92,7 +51,11 @@
 
 <script>
 import { toRaw } from 'vue';
+import axios from 'axios';
 
+import { useCounterStore } from '@/stores/counter';
+import { mapState } from 'pinia'
+import { mapActions } from 'pinia'
 export default {
   props:{
     insertOrUpdateDialogItem: {
@@ -106,15 +69,12 @@ export default {
   },
   data() {
     return{
-      // loginSchema: {
-      //   ref:'required|min:3|max:32',
-      //   location:'required',
-      //   ResponsableName: 'required',
-      //   clientName: 'required'
-      // },
+      
+      selectedImages: [],
+
       Title:toRaw(this.insertOrUpdateDialogItem).Title != undefined ? toRaw(this.insertOrUpdateDialogItem).Title : '',
       Description:toRaw(this.insertOrUpdateDialogItem).Description != undefined ? toRaw(this.insertOrUpdateDialogItem).Description : '',
-      Reference:toRaw(this.insertOrUpdateDialogItem).Reference != undefined ? toRaw(this.insertOrUpdateDialogItem).Reference : [],
+      Reference:toRaw(this.insertOrUpdateDialogItem).Reference != undefined ? toRaw(this.insertOrUpdateDialogItem).Reference : '',
       TitleAlarm:'Enter post title!',
       DescriptionAlarm:'Enter post description!',
       ReferenceAlarm:'Enter post reference!',
@@ -131,34 +91,89 @@ export default {
     }
   },
   methods:{
+    ...mapActions(useCounterStore, ['logout']),
+
     submitButtonPushed(){
       this.submitClicked = true
     },
-    submitData(values){
-      if(this.Reference.length && this.Title && this.Description){
-        this.login_in_submission = true;
-        this.login_show_alert = true;
-        this.login_alert_variant = 'color: white; background-color:#1a1a1a;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 #1a1a1a4';
-        this.login_alert_msg = 'Please wait! We are logging you in.';
+    async submitData(values){
 
-        values['Title'] = this.Title
-        values['Description'] = this.Description
-        values['Reference'] = this.Reference
+      this.login_in_submission = true;
+      this.login_show_alert = true;
+      this.login_alert_variant = 'color: white; background-color:#1a1a1a;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 #1a1a1a4';
+      this.login_alert_msg = 'Please wait! We are logging you in.';
 
-        this.$emit('update:insertOrUpdateItem', values);
-        this.$emit("enter-in-db", values);
+      
+      if(this.Reference && this.Description){
+        
+        const formData = new FormData();
+        
+        for (let i = 0; i < this.selectedImages.length; i++) {
+          const file = this.selectedImages[i];
+          formData.append('images', file);
+        }
+        
+        formData.append('reference', this.Reference);
+        formData.append('description', this.Description);
+        console.log(formData)
 
-        console.log(values)
+        await axios.post(this.BASE_URL+'post/create', formData,
+        {
+          headers: {
+            'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+          .then(response => {
+            // Handle the response from the backend
+            console.log('Form submitted successfully', response.data);
+            this.login_in_submission = true;
+            this.login_alert_variant = 'color: white; background-color:#339933; border: 1px solid #339933; box-shadow: 0 0 5px rgba(0,255,0,.3), 0 0 10px rgba(0,255,0,.2), 0 0 15px rgba(0,255,0,.1), 0 1px 0 #339933;';
+            this.login_alert_msg = 'Success! You have inserted new post.';
+          })
+          .catch(error => {
+            // Handle errors
+            console.error('Error submitting form', error);
+            if(error.response.data.detail == 'Could not validate credentials'){
+              this.logout()          
+            }
+            this.login_in_submission = true;
+            this.login_alert_variant = 'color: white; background-color:#990000;  border: 1px solid #990000;  box-shadow: 0 0 5px rgba(255,0,0,.3), 0 0 10px rgba(255,0,0,.2), 0 0 15px rgba(255,0,0,.1), 0 1px 0 #990000';
+            this.login_alert_msg = error.response.data.detail;
+            return
+          });
+
+          
+          setTimeout(()=>{
+            window.location.reload();
+          },5000)
+        // window.location.reload();
+        // this.login_in_submission = true;
+        // this.login_show_alert = true;
+        // this.login_alert_variant = 'color: white; background-color:#1a1a1a;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 #1a1a1a4';
+        // this.login_alert_msg = 'Please wait! We are logging you in.';
+
+        // values['Title'] = this.Title
+        // values['Description'] = this.Description
+        // values['Reference'] = this.Reference
+
+        // this.$emit('update:insertOrUpdateItem', values);
+        // this.$emit("enter-in-db", values);
+
+        // console.log(values)
       }
       
     }
   },
   created(){
-          console.log(toRaw(this.insertOrUpdateDialogItem))
+    console.log(toRaw(this.insertOrUpdateDialogItem))
 
     console.log(this.insertOrUpdateDialogItem)
   },
   computed: {
+    ...mapState(useCounterStore, ['BASE_URL']),
+
     myProxy() {
       console.log(new Proxy(this.insertOrUpdateDialogItem,{}))
       return new Proxy(this.insertOrUpdateDialogItem,{}

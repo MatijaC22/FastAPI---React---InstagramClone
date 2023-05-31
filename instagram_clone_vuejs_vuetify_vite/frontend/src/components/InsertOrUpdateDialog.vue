@@ -11,21 +11,21 @@
           </v-card-title>
           <v-card-text>
             <v-container>
-              <div v-if="type == 'Containers'">
+              <div v-if="type == 'CONTAINERS'">
                 <InsertOrUpdateContainersForm 
                     :insertOrUpdateDialogItem='insertOrUpdateDialogItem'
                     @update:insertOrUpdateItem="insertOrUpdateDialogItem = $event"
                     @enter-in-db="insertOrUpdateItemInDB"
                 />
               </div>
-              <div v-else-if="type == 'Employes'">
+              <div v-else-if="type == 'EMPLOYES'">
                 <InsertOrUpdateEmployesForm 
                     :insertOrUpdateDialogItem='insertOrUpdateDialogItem'
                     @update:insertOrUpdateItem="insertOrUpdateDialogItem = $event"
                     @enter-in-db="insertOrUpdateItemInDB"
                 />
               </div>
-              <div v-else-if="type == 'Posts'">
+              <div v-else-if="type == 'POSTS'">
                 <InsertOrUpdatePostsForm 
                     :insertOrUpdateDialogItem='insertOrUpdateDialogItem'
                     @update:insertOrUpdateItem="insertOrUpdateDialogItem = $event"
@@ -119,10 +119,10 @@ export default {
       this.dialogValue = false;
     }
   },
-  // created(){
-  //   console.log('ddsfs')
-  //   console.log(this.insertOrUpdateDialogItem)
-  // }
+  created(){
+    // console.log(this.type)
+    // console.log(this.insertOrUpdateDialogItem)
+  }
 }
 </script>
 

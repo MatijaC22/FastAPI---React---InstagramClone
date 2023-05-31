@@ -2,7 +2,7 @@
 <div>
   
   <v-card border density="compact" :title="name" variant="text">
-    <tr style="width:100%;">
+    <tr style="min-width:100%;">
       <div style="display:flex; align-items:center;">
         <div style="flex-grow: 1;">
           <v-text-field
@@ -13,7 +13,6 @@
               append-inner-icon="mdi-magnify"
               single-line
               hide-details
-              @click:append-inner="onClick"
               style="min-width:230px; margin: 0 10px 0 15px;"
               v-model="search"
             >
@@ -65,6 +64,7 @@
           v-bind="props"
           height="42"
           class="ml-2"
+          @click="this.showInsertOrUpdateDialog({}, 'insert')"
         >
           INSERT
         </v-btn>
@@ -93,7 +93,7 @@
   </thead>
     <tbody>
       <tr v-for="(item, index) in paginatedItems" :key="index">
-        <td v-for="(value, key) in item" :key="key" :style="`color: ${key=='lastModify' && isOlderThan30Days(item.lastModify) ? 'red' : 'black'}`">{{ value }}</td>
+        <td v-for="(value, key) in item" :key="key" :style="`color: ${key=='last_modify' && isOlderThan30Days(item.lastModify) ? 'red' : 'black'}`">{{ (key.indexOf('last_modify') != (-1) || key.indexOf('created_at')  != (-1)) ? formatDate(value) : value }}</td>
         <td>
           <router-link :to="name == 'Containers' ? '/post/'+item.tankRef : 'Containers' ? '/user/'+item.id : item.url" class="routerLink" style="color:black;">
             View
@@ -181,11 +181,11 @@ export default {
       deleteDialog: false,
       deleteDialogItem:{},
       typeOfDialog:'insert',
-
     }
   },
   computed: {
     filteredItems(){
+      console.log(this.list)
       return this.list.filter((data) => {
         const values = Object.values(data)
         return values.some((value) => {
@@ -203,6 +203,16 @@ export default {
     },
   },
   methods:{
+    formatDate(timestamp) {
+      const dateObj = new Date(timestamp);
+      const year = dateObj.getFullYear();
+      const month = dateObj.getMonth() + 1;
+      const date = dateObj.getDate();
+      const hours = dateObj.getHours();
+      const minutes = dateObj.getMinutes();
+      const seconds = dateObj.getSeconds();
+      return `${year}-${month}-${date}`;
+    },
     previousPage() {
       if (this.currentPage > 1) {
         this.currentPage -= 1;

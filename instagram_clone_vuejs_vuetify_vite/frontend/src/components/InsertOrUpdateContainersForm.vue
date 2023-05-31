@@ -14,12 +14,12 @@
                 </v-col>
                 <v-col cols="12" sm="6" md="4">
                   <v-text-field
-                    label="Location*"
+                    label="Location"
                     v-model="Location"
                     type="input"
                     hide-details
                   ></v-text-field>
-                  <span v-if="submitClicked && Location == ''" style="color:red;">{{LocationAlarm}}</span>
+                  <!-- <span v-if="submitClicked && Location == ''" style="color:red;">{{LocationAlarm}}</span> -->
                 </v-col>
                 <v-col cols="12" sm="6" md="4">
                   <v-select
@@ -33,12 +33,22 @@
                 <v-col cols="12">
                   <v-text-field
                     label="Responsible Name*"
-                    v-model="ResponsableName"
+                    v-model="ResponsibleName"
                     type="input"
                     class="mt-4"
                     hide-details
                   ></v-text-field>
-                  <span v-if="submitClicked && ResponsableName == ''" style="color:red;">{{LocationAlarm}}</span>
+                  <span v-if="submitClicked && ResponsibleName == ''" style="color:red;">{{ResponsibleNameAlarm}}</span>
+                </v-col>
+                <v-col cols="12">
+                  <v-text-field
+                    label="Responsible Email*"
+                    v-model="ResponsibleEmail"
+                    type="input"
+                    class="mt-4"
+                    hide-details
+                  ></v-text-field>
+                  <span v-if="submitClicked && ResponsibleEmail == ''" style="color:red;">{{ResponsibleEmailAlarm}}</span>
                 </v-col>
                 <v-col cols="12">
                   <v-text-field
@@ -91,7 +101,12 @@
 </template>
 
 <script>
-import { isProxy, toRaw } from 'vue';
+import { toRaw } from 'vue';
+import axios from 'axios'
+
+import { useCounterStore } from '@/stores/counter';
+import { mapState } from 'pinia'
+import { mapActions } from 'pinia'
 
 export default {
   props:{
@@ -109,19 +124,21 @@ export default {
       // loginSchema: {
       //   ref:'required|min:3|max:32',
       //   location:'required',
-      //   ResponsableName: 'required',
+      //   ResponsibleName: 'required',
       //   clientName: 'required'
       // },
       Reference:toRaw(this.insertOrUpdateDialogItem).Reference != undefined ? toRaw(this.insertOrUpdateDialogItem).Reference : '',
       Location:toRaw(this.insertOrUpdateDialogItem).Location != undefined ? toRaw(this.insertOrUpdateDialogItem).Location : '',
-      ResponsableName:toRaw(this.insertOrUpdateDialogItem).ResponsableName != undefined ? toRaw(this.insertOrUpdateDialogItem).ResponsableName : '',
+      ResponsibleName:toRaw(this.insertOrUpdateDialogItem).ResponsibleName != undefined ? toRaw(this.insertOrUpdateDialogItem).ResponsibleName : '',
+      ResponsibleEmail:toRaw(this.insertOrUpdateDialogItem).ResponsibleEmail != undefined ? toRaw(this.insertOrUpdateDialogItem).ResponsibleEmail : '',
       ClientName:toRaw(this.insertOrUpdateDialogItem).ClientName != undefined ? toRaw(this.insertOrUpdateDialogItem).ClientName : '',
       Country:toRaw(this.insertOrUpdateDialogItem).Country != undefined ? toRaw(this.insertOrUpdateDialogItem).Country : [],
       TransportType:toRaw(this.insertOrUpdateDialogItem).TransportType != undefined ? toRaw(this.insertOrUpdateDialogItem).TransportType : [],
       ProductType:toRaw(this.insertOrUpdateDialogItem).ProductType != undefined ? toRaw(this.insertOrUpdateDialogItem).ProductType : [],
       ReferenceAlarm:'Enter container reference!',
-      LocationAlarm:'Enter location!',
-      ResponsableNameAlarm:'Enter supervisor name!',
+      // LocationAlarm:'Enter location!',
+      ResponsibleNameAlarm:'Enter supervisor name!',
+      ResponsibleEmailAlarm:'Enter supervisor email!',
       ClientNameAlarm:'Enter client name!',
       CountryAlarm: 'Choose country!',
       TransportTypeAlarm: 'Choose type of transport!',
@@ -138,38 +155,101 @@ export default {
     }
   },
   methods:{
+    ...mapActions(useCounterStore, ['logout']),
+
     submitButtonPushed(){
       this.submitClicked = true
     },
-    submitData(values){
-      if(this.Country.length && this.TransportType.length && this.ProductType.length && this.Reference && this.Location && this.ResponsableName && this.ClientName){
-        this.login_in_submission = true;
-        this.login_show_alert = true;
-        this.login_alert_variant = 'color: white; background-color:#1a1a1a;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 #1a1a1a4';
-        this.login_alert_msg = 'Please wait! We are logging you in.';
+    async submitData(values){
+      if(
+        this.Country.length && 
+        this.TransportType.length && 
+        this.ProductType.length && 
+        this.Reference && 
+        this.ResponsibleEmail && 
+        this.ResponsibleName && 
+        this.ClientName
+        ){
+        const formData = new FormData();
+        
+                
+        formData.append('country', this.Country);
+        formData.append('transport_type', this.TransportType);
+        formData.append('product_type', Object.values(this.ProductType).join(', '));
+        formData.append('reference_number', this.Reference);
+        formData.append('location', this.Location);
+        formData.append('responsible_name', this.ResponsibleName);
+        formData.append('responsible_email', this.ResponsibleEmail);
+        formData.append('client_name', this.ClientName);
+        
+        // console.log(this.Country)
+        // console.log(Object.values(this.ProductType).join(', '))
+        // console.log(this.ProductType)
+        // console.log(this.Reference)
+        // console.log(this.Location)
+        // console.log(this.ResponsibleName)
+        // console.log(this.ResponsibleEmail)
+        // console.log(this.ClientName)
 
-        values['Country'] = this.Country
-        values['TransportType'] = this.TransportType
-        values['ProductType'] = this.ProductType
-        values['Reference'] = this.Reference
-        values['Location'] = this.Location
-        values['ResponsableName'] = this.ResponsableName
-        values['ClientName'] = this.ClientName
+        await axios.post(this.BASE_URL+'container/create', formData,
+        {
+          headers: {
+            'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+          .then(response => {
+            // Handle the response from the backend
+            console.log('Form submitted successfully', response.data);
+          })
+          .catch(error => {
+            // Handle errors
+            console.error('Error submitting form', error);
+            if(error.response.data.detail == 'Could not validate credentials'){
+              this.logout()          
+            }
+            this.login_in_submission = false;
+            this.login_alert_variant = 'color: white; background-color:#990000;  border: 1px solid #990000;  box-shadow: 0 0 5px rgba(255,0,0,.3), 0 0 10px rgba(255,0,0,.2), 0 0 15px rgba(255,0,0,.1), 0 1px 0 #990000';
+            this.login_alert_msg = error.detail;
+            return
+          });
 
-        this.$emit('update:insertOrUpdateItem', values);
-        this.$emit("enter-in-db", values);
+          this.login_alert_variant = 'color: white; background-color:#339933; border: 1px solid #339933; box-shadow: 0 0 5px rgba(0,255,0,.3), 0 0 10px rgba(0,255,0,.2), 0 0 15px rgba(0,255,0,.1), 0 1px 0 #339933;';
+          this.login_alert_msg = 'Success! You have inserted new post.';
+          setTimeout(()=>{
+            window.location.reload();
+          },5000)
+        // this.login_in_submission = true;
+        // this.login_show_alert = true;
+        // this.login_alert_variant = 'color: white; background-color:#1a1a1a;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 #1a1a1a4';
+        // this.login_alert_msg = 'Please wait! We are logging you in.';
 
-        console.log(values)
+        // values['Country'] = this.Country
+        // values['TransportType'] = this.TransportType
+        // values['ProductType'] = this.ProductType
+        // values['Reference'] = this.Reference
+        // values['Location'] = this.Location
+        // values['ResponsibleName'] = this.ResponsibleName
+        // values['ResponsibleEmail'] = this.ResponsibleEmail
+        // values['ClientName'] = this.ClientName
+
+        // this.$emit('update:insertOrUpdateItem', values);
+        // this.$emit("enter-in-db", values);
+
+        // console.log(values)
       }
       
     }
   },
   created(){
-          console.log(toRaw(this.insertOrUpdateDialogItem))
+    console.log(toRaw(this.insertOrUpdateDialogItem))
 
     console.log(this.insertOrUpdateDialogItem)
   },
   computed: {
+    ...mapState(useCounterStore, ['BASE_URL']),
+
     myProxy() {
       console.log(new Proxy(this.insertOrUpdateDialogItem,{}))
       return new Proxy(this.insertOrUpdateDialogItem,{}

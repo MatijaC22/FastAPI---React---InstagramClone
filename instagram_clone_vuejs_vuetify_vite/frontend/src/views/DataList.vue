@@ -8,7 +8,7 @@
                     border
                     class="mb-2"
                     density="compact">
-    <DataTable :dataItems="containersList" :dataItemsHeaders="containersListHeaders" name="Containers"/>
+    <DataTable :dataItems="containersList" :dataItemsHeaders="containersListHeaders" name="CONTAINERS"/>
     <br>
     </v-card>
     <br><br>
@@ -16,7 +16,7 @@
                     border
                     class="mb-2"
                     density="compact">
-    <DataTable :dataItems="employesList" :dataItemsHeaders="employesListHeaders" name="Employes"/>
+    <DataTable :dataItems="employesList" :dataItemsHeaders="employesListHeaders" name="EMPLOYES"/>
     <br>
     </v-card>
     <br><br>
@@ -46,7 +46,7 @@ export default {
         Reference:'3224301',
         lastModify:'15/10/2023',
         Location:'San Sebastion',
-        Country:'Guatemala',
+        Country:'Peru',
         ResponsableName:'Ivan Sen',
         ClientName:'Sin Xaio Hel',
         TransportType:'Sea',
@@ -56,7 +56,7 @@ export default {
         Reference:'3224302',
         lastModify:'15/10/2021',
         Location:'San Sebastion',
-        Country:'Guatemala',
+        Country:'Peru',
         ResponsableName:'Ivan Sen',
         ClientName:'Sin Xaio Hel',
         TransportType:'Sea',
@@ -65,7 +65,7 @@ export default {
       {
         Reference:'3224303',
         lastModify:'15/10/2021',
-        Location:'San Sebastion',
+        Location:'Peuona',
         Country:'Guatemala',
         ResponsableName:'Ivan Sen',
         ClientName:'Sin Xaio Hel',

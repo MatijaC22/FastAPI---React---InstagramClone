@@ -1,12 +1,12 @@
 <template>
   <div class="bg-image"></div>
-  <div v-if="auth">
+  <div v-if="!userLoggedIn">
       <div class="fullscreen-card">
         <Auth/>
       </div>
   </div>
   <div v-else>
-    <v-app>
+    <v-app class="mt-3">
       <NavBar/>
       <router-view />
     </v-app>
@@ -16,11 +16,13 @@
 <script>
 import Auth from '@/components/Auth.vue';
 
-import NavBar from '@/components/NavBarSS.vue'
+import NavBar from '@/components/NavBar.vue'
 import { useDisplay } from 'vuetify'
 
 import { defineComponent } from 'vue'
 
+import { useCounterStore } from '@/stores/counter';
+import { mapWritableState } from 'pinia'
 
 export default defineComponent({
   name: 'App',
@@ -30,16 +32,20 @@ export default defineComponent({
   },
   data () {
     return{
-      auth: true,
-    
     }
   },
   created(){
     const accessToken = localStorage.getItem('access_token');
     if(accessToken != null){
-      this.auth = false;
+      this.userLoggedIn = true
+      return
     }
+    this.userLoggedIn = false
+
   },
+  computed:{
+    ...mapWritableState(useCounterStore, ['userLoggedIn']),
+  }
 })
 </script>
 

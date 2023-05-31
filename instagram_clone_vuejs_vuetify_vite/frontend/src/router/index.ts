@@ -35,6 +35,11 @@ const router = createRouter({
       path: '/database/:type',
       name: 'databaseFull',
       component: () => import(/* webpackChunkName: "DatabaseFull" */ '../views/DatabaseFull.vue')
+    },
+    {
+      path: '/priceCalculator',
+      name: 'PriceCalculator',
+      component: () => import(/* webpackChunkName: "PriceCalculator" */ '../views/PriceCalculator.vue')
     }
   ]
 })

@@ -1,6 +1,6 @@
 <template>
       <v-main>
-        <v-container fluid class="pa-1">
+        <v-container fluid class="pa-1 mt-3">
           <!-- <v-card  class="mx-auto bg" elevation="2" style="background-image: url('../src/assets/images/background2.jpg');  background-size: cover;"> -->
           <v-card elevation="2" style="background-image: linear-gradient(to top right, rgba(19,84,122,.8), rgba(128,208,199,.8)), url('../src/assets/images/background3.jpg'); background-size: cover;">
             <v-img height="200px" />
@@ -9,14 +9,8 @@
             <v-row justify="center" >
               <v-col align-self="start" class="d-flex justify-center align-center pa-0" cols="12">
                 <v-avatar class="profile avatar-center-heigth avatar-shadow" color="grey" size="164">
-                  <v-btn @click="onButtonClick" class="upload-btn" x-large icon>
-                    <v-icon>
-                      mdi-camera
-                    </v-icon>
-                  </v-btn>
                   <input ref="uploader" class="d-none" type="file" accept="image/*" :change="onFileChanged">
-                  <v-img src="../src/assets/images/matija.jpg"></v-img>
-
+                  <v-img v-if="userData.email != undefiend" :src="this.BASE_URL+'images/users/'+userData.image_url"></v-img>
                 </v-avatar>
               </v-col>
             </v-row>
@@ -30,13 +24,21 @@
                       User Info
                     </v-card-title>
                     <v-card-text>
-                      <v-container>
+                      <v-container v-if="userData.id != undefined">
                         <v-row>
                           <v-col cols="4" sm="2">
                             <strong>Name:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            Matija
+                            {{userData.name.toUpperCase()}}
+                          </v-col>
+                        </v-row>
+                        <v-row v-if="userData.middle_name != ''">
+                          <v-col cols="4" sm="2">
+                            <strong>Middle Name:</strong>
+                          </v-col>
+                          <v-col cols="8" sm="10">
+                            {{userData.middle_name.toUpperCase()}}
                           </v-col>
                         </v-row>
                         <v-row>
@@ -44,7 +46,15 @@
                             <strong>Surname:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            Corak
+                            {{userData.last_name.toUpperCase()}}
+                          </v-col>
+                        </v-row>
+                        <v-row>
+                          <v-col cols="4" sm="2">
+                            <strong>Date of Birth:</strong>
+                          </v-col>
+                          <v-col cols="8" sm="10">
+                            {{userData.date_of_birth.toUpperCase()}}
                           </v-col>
                         </v-row>
                         <v-row>
@@ -52,7 +62,7 @@
                             <strong>Email:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            mcorak22@gmail.com         
+                            {{userData.email}}
                           </v-col>
                         </v-row>
                         <v-row>
@@ -60,7 +70,7 @@
                             <strong>Country:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            Croatia          
+                            CROATIA - manual modifed
                           </v-col>
                         </v-row>
                         <v-row>
@@ -68,7 +78,7 @@
                             <strong>Office:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            Mali Losinj          
+                            Mali Losinj - manual modified          
                           </v-col>
                         </v-row>
                         <v-row>
@@ -76,7 +86,15 @@
                             <strong>Position:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            Software Developer          
+                            {{userData.position.toUpperCase()}}         
+                          </v-col>
+                        </v-row>
+                        <v-row>
+                          <v-col cols="4" sm="2">
+                            <strong>Created At:</strong>
+                          </v-col>
+                          <v-col cols="8" sm="10">
+                            {{formatDate(userData.created_at)}}         
                           </v-col>
                         </v-row>
                       </v-container>
@@ -112,9 +130,9 @@
                 </v-item-group>
 
                 <div v-if="!showPosts">
-                  <InfoData/>
+                  <UserInfoData/>
                 </div>
-                <div v-else class="mx-1 mb-2">
+                <div v-else class="mx-0 mb-1">
                   <PostsData :postList="postList"/>
                 </div>
 
@@ -139,13 +157,18 @@
 
 
 <script>
+import axios from 'axios'
 import PostsData from '@/components/PostData.vue'
-import InfoData from '@/components/UserInfoData.vue'
+import UserInfoData from '@/components/UserInfoData.vue'
+
+import { useCounterStore } from '@/stores/counter';
+import { mapState } from 'pinia'
+import { mapActions } from 'pinia'
 
   export default {
     components:{
       PostsData,
-      InfoData
+      UserInfoData
     },
     data() {
       return{
@@ -153,18 +176,54 @@ import InfoData from '@/components/UserInfoData.vue'
         items: [
           "Info","Posts"
         ],
-        postList:[]
+        postList:[],
+        userData:{}
       }
     },
     methods:{
+      ...mapActions(useCounterStore, ['logout']),
       toggle(index) {
-      if(index == 0){
-        this.showPosts = false;
-      }
-      if(index == 1){
-        this.showPosts = true;
-      }
-    }
+        if(index == 0){
+          this.showPosts = false;
+        }
+        if(index == 1){
+          this.showPosts = true;
+          this.getUserPosts();
+        }
+      },
+      formatDate(timestamp) {
+        const dateObj = new Date(timestamp);
+        const year = dateObj.getFullYear();
+        const month = dateObj.getMonth() + 1;
+        const date = dateObj.getDate();
+        const hours = dateObj.getHours();
+        const minutes = dateObj.getMinutes();
+        const seconds = dateObj.getSeconds();
+        return `${year}-${month}-${date}`;
+      },
+      async getUserPosts(){
+        if(this.showPosts){
+          await axios.get(this.BASE_URL + 'post/all',
+            {
+              headers: {
+                'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+                'Accept': 'application/json'
+              }
+            })
+            .then(response => {
+              console.log('this is response.', response);
+              this.postList = response.data     
+            })
+            .catch(error => {
+              console.error('There was an error:', error.response.data);
+              this.logout() 
+            });
+        }
+      },
+    },
+    computed:{
+      ...mapState(useCounterStore, ['BASE_URL']),
+
     },
     async created() {
       const part = this.$route.query.part
@@ -173,18 +232,23 @@ import InfoData from '@/components/UserInfoData.vue'
       } else {
         this.showPosts = true
       }
-      
-      await axios.get(this.BASE_URL + 'post/all')
-      .then(response => {
-        console.log('this is response.', response);
-        this.postList = response.data     
-      })
-      .catch(error => {
-        console.error('There was an error:', error.response.data);
-      });
-  
-    }
 
+      await axios.get(this.BASE_URL + 'user/'+window.location.pathname.split('/').pop(),
+        {
+          headers: {
+            'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+            'Accept': 'application/json'
+          }
+        })
+        .then(response => {
+          console.log('this is user data.', response);
+          this.userData = response.data     
+        })
+        .catch(error => {
+          console.error('There was an error:', error.response.data);
+          this.logout() 
+        });     
+    }
   }
 </script>
 
