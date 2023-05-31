@@ -28,6 +28,13 @@ def login(request:OAuth2PasswordRequestForm = Depends(), db: Session = Depends(g
     return {
         'access_token': access_token,
         'token_type': 'bearer',
-        'user_id': user.id,
-        'email': user.email
+        # 'user_id': user.id,
+        # 'email': user.email,
+        'user': {
+            'name':user.name,
+            'last_name':user.last_name,
+            'user_id':user.id,
+            'email':user.email,
+            'image_url':user.image_url
+        }
     }

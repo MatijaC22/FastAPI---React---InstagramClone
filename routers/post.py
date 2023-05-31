@@ -1,60 +1,49 @@
-from fastapi import APIRouter, Depends, status, UploadFile, File
+import os
+from fastapi import APIRouter, Depends, Form, status, UploadFile, File
 from routers.schemas import PostBase, PostDisplay
 from sqlalchemy.orm.session import Session
 from db.database import get_db
-from fastapi.exceptions import  HTTPException
 from db import db_post
 from typing import List, Optional
-import random
-import string
-import shutil
-from routers.schemas import UserAuth
 from auth.oauth2 import get_current_user
+
 
 router = APIRouter(
     prefix = '/post',
     tags = ['post']
 )
 
-image_url_types = ['absolute', 'relative']
-
-
-@router.post('/post', response_model=PostDisplay)
-def create(request: PostBase, db: Session = Depends(get_db), current_user: UserAuth = Depends(get_current_user)):
-    if not request.image_url_type in image_url_types:
-      raise HTTPException(
-        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY, 
-        detail = "Parameter image_url_type can only take values absolute or relative"
-      )
-    return db_post.create(db, request)
-
-
 @router.get('/all', response_model=List[PostDisplay])
-def posts(db: Session = Depends(get_db)):
-   return db_post.get_all(db)
+def posts(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+   return db_post.get_all(db, current_user)
 
 @router.get('/package', response_model=List[PostDisplay])
-def posts(page: int = 1, per_page: int = 10, user_id: Optional[int] = None, db: Session = Depends(get_db)):
-   return db_post.get_all_package(db, user_id, page, per_page)
+def posts(page: int = 1, per_page: int = 10, user_id: Optional[int] = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+   return db_post.get_all_package(db, current_user, user_id, page, per_page)
 
-@router.post('/image')
-def upload_image(image: UploadFile = File(...), current_user: UserAuth = Depends(get_current_user)):
-   letters = string.ascii_letters
-   rand_str = ''.join(random.choice(letters) for i in range(6))
-   new = f'_{rand_str}.'
-   filename = new.join(image.filename.rsplit('.', 1))
-   path = f'images/{filename}'
-
-   with open(path, "w+b") as buffer:
-      shutil.copyfileobj(image.file, buffer)
-      return {'filename': path}
+@router.post("/create")
+def submit_form(
+   images: List[UploadFile] = File(...), 
+   reference: str = Form(...), 
+   description: str = Form(...), 
+   db: Session = Depends(get_db), 
+   current_user = Depends(get_current_user)
+   ):
+    return db_post.create(db, images, reference, description, current_user)
    
+####################################################################################################################
+@router.get('/{id}', response_model = PostDisplay)
+def post(id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+   return db_post.get_one(db, id, current_user)
 
-@router.get('/{id}')
-def post(id: int, db: Session = Depends(get_db)):
-   return db_post.get_one(db, id)
+
+@router.post('/update/{id}', response_model = PostDisplay)
+def update_container(id:int, request: PostDisplay, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    return db_post.update_post(db, id, current_user, request)
 
 
 @router.post('/delete/{id}')
 def delete(id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
    return db_post.delete(db, id, current_user.id)
+
+

@@ -1,11 +1,12 @@
-from routers.schemas import UserBase, UserUpdateBase
+from routers.schemas import UserUpdateBase
 from sqlalchemy.orm.session import Session 
 from db.models import DbUser
 from db.hashing import Hash
-from fastapi import HTTPException, status, UploadFile, File
+from fastapi import HTTPException, status, UploadFile
 import datetime
-
-import shutil
+from typing import List
+import os
+from utils import validate_file_extension, validate_file_size
 
 
 # Event function to create a new user if none exist
@@ -23,7 +24,7 @@ def create_initial_user(db: Session):
             date_of_birth = '07/12/1992',
             position = 'WebDeveloper',
             active = True,
-            image_url = '/images/users/matija',
+            image_url = 'matija@gmail.com.jpg',
             created_at = datetime.datetime.now(),
             last_modify = datetime.datetime.now(),
         )
@@ -31,29 +32,78 @@ def create_initial_user(db: Session):
         db.commit()
         db.refresh(new_user)
 
-def create_user(db: Session, current_user:bool, request: UserBase):
-    if not current_user:
+# def create_user(db: Session, current_user:bool, request: UserBase):
+#     if not current_user:
+#         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED,
+#           detail = f"User don't have authorization!")
+    
+#     user_exist = db.query(DbUser).filter(DbUser.email == request.email).first()
+#     if user_exist:
+#         raise HTTPException(status_code = status.HTTP_409_CONFLICT,
+#           detail = f"Inserted email already exist!")
+    
+#     new_user = DbUser(
+#         email = request.email,
+#         password = Hash.bcrypt(request.password),
+#         administrator = request.administrator,
+#         name = request.name,
+#         middle_name = request.middle_name,
+#         last_name = request.last_name,
+#         date_of_birth = request.date_of_birth,
+#         position = request.position,
+#         active = request.active,
+#         image_url = request.image_url,
+#         created_at = datetime.datetime.now(),
+#         last_modify = datetime.datetime.now(),
+#     )
+#     db.add(new_user)
+#     db.commit()
+#     db.refresh(new_user)
+#     return new_user
+
+def create(
+        db: Session, password: str, date_of_birth:datetime, image:UploadFile, 
+        active:bool, administrator:bool, email:str, name:str, middle_name:str, 
+        last_name:str, position:str, current_user:DbUser
+    ):
+    if not current_user.administrator:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED,
           detail = f"User don't have authorization!")
+
+    user_exist = db.query(DbUser).filter(DbUser.email == email).first()
     
-    user_exist = db.query(DbUser).filter(DbUser.email == request.email).first()
-    if user_exist:
-        raise HTTPException(status_code = status.HTTP_409_CONFLICT,
-          detail = f"Inserted email already exist!")
+    if user_exist is not None and user_exist.email == user_exist.email:
+        raise HTTPException(status_code = status.HTTP_403_FORBIDDEN,
+          detail = f"User with this email already exist!")
+    
+    image_dir = f"images/users/"
+    os.makedirs(image_dir, exist_ok=True)
+    
+    imageListAsString = ''
+    validate_file_extension(os.path.splitext(image.filename)[1])        
+    validate_file_size(image.file, 5 * 1024 * 1024)
+    
+    file_extension = os.path.splitext(image.filename)[1]
+    new_filename = f"{email}{file_extension}"
+
+
+    file_path = os.path.join(image_dir, new_filename)
+    with open(file_path, "wb") as f:
+        f.write(image.file.read())
     
     new_user = DbUser(
-        email = request.email,
-        password = Hash.bcrypt(request.password),
-        administrator = request.administrator,
-        name = request.name,
-        middle_name = request.middle_name,
-        last_name = request.last_name,
-        date_of_birth = request.date_of_birth,
-        position = request.position,
-        active = request.active,
-        image_url = request.image_url,
+        password = Hash.bcrypt(password),
+        email = email,
+        administrator = administrator,
+        name = name,
+        middle_name = middle_name,
+        last_name = last_name,
+        date_of_birth = date_of_birth,
+        position = position,
+        image_url = new_filename,
+        active = active,
         created_at = datetime.datetime.now(),
-        last_modify = datetime.datetime.now(),
+        last_modify = datetime.datetime.now()
     )
     db.add(new_user)
     db.commit()
@@ -133,17 +183,17 @@ def delete(db: Session, id: int, current_user_admin:bool):
     db.commit()
     return 'ok'
 
-# NAPRAVI OVO KAKO SPADA
-def upload_image(email, image: UploadFile = File(...)):
-   if hasattr(image, 'filename'):
-       new = f'_{email}.'
-       filename = new.join(image.filename.rsplit('.', 1))
-       path = f'images/users/{filename}'
-    #    return path
-   else:
-       path = f"/images/users/{email}"
+# # NAPRAVI OVO KAKO SPADA
+# def upload_image(email, image: UploadFile = File(...)):
+#    if hasattr(image, 'filename'):
+#        new = f'_{email}.'
+#        filename = new.join(image.filename.rsplit('.', 1))
+#        path = f'images/users/{filename}'
+#     #    return path
+#    else:
+#        path = f"/images/users/{email}"
 
 
-   with open(path, "w+b") as buffer:
-      shutil.copyfileobj(image.file, buffer)
-      return {'filename': path}
+#    with open(path, "w+b") as buffer:
+#       shutil.copyfileobj(image.file, buffer)
+#       return {'filename': path}
