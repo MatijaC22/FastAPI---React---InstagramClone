@@ -127,14 +127,14 @@ export default {
       //   ResponsibleName: 'required',
       //   clientName: 'required'
       // },
-      Reference:toRaw(this.insertOrUpdateDialogItem).Reference != undefined ? toRaw(this.insertOrUpdateDialogItem).Reference : '',
-      Location:toRaw(this.insertOrUpdateDialogItem).Location != undefined ? toRaw(this.insertOrUpdateDialogItem).Location : '',
-      ResponsibleName:toRaw(this.insertOrUpdateDialogItem).ResponsibleName != undefined ? toRaw(this.insertOrUpdateDialogItem).ResponsibleName : '',
-      ResponsibleEmail:toRaw(this.insertOrUpdateDialogItem).ResponsibleEmail != undefined ? toRaw(this.insertOrUpdateDialogItem).ResponsibleEmail : '',
-      ClientName:toRaw(this.insertOrUpdateDialogItem).ClientName != undefined ? toRaw(this.insertOrUpdateDialogItem).ClientName : '',
-      Country:toRaw(this.insertOrUpdateDialogItem).Country != undefined ? toRaw(this.insertOrUpdateDialogItem).Country : [],
-      TransportType:toRaw(this.insertOrUpdateDialogItem).TransportType != undefined ? toRaw(this.insertOrUpdateDialogItem).TransportType : [],
-      ProductType:toRaw(this.insertOrUpdateDialogItem).ProductType != undefined ? toRaw(this.insertOrUpdateDialogItem).ProductType : [],
+      Reference:toRaw(this.insertOrUpdateDialogItem).reference_number != undefined ? toRaw(this.insertOrUpdateDialogItem).reference_number : '',
+      Location:toRaw(this.insertOrUpdateDialogItem).location != undefined ? toRaw(this.insertOrUpdateDialogItem).location : '',
+      ResponsibleName:toRaw(this.insertOrUpdateDialogItem).responsible_name != undefined ? toRaw(this.insertOrUpdateDialogItem).responsible_name : '',
+      ResponsibleEmail:toRaw(this.insertOrUpdateDialogItem).responsible_email != undefined ? toRaw(this.insertOrUpdateDialogItem).responsible_email : '',
+      ClientName:toRaw(this.insertOrUpdateDialogItem).client_name != undefined ? toRaw(this.insertOrUpdateDialogItem).client_name : '',
+      Country:toRaw(this.insertOrUpdateDialogItem).country != undefined ? toRaw(this.insertOrUpdateDialogItem).country : [],
+      TransportType:toRaw(this.insertOrUpdateDialogItem).transport_type != undefined ? toRaw(this.insertOrUpdateDialogItem).transport_type : [],
+      ProductType:toRaw(this.insertOrUpdateDialogItem).product_type != undefined ? toRaw(this.insertOrUpdateDialogItem).product_type : [],
       ReferenceAlarm:'Enter container reference!',
       // LocationAlarm:'Enter location!',
       ResponsibleNameAlarm:'Enter supervisor name!',
@@ -150,8 +150,8 @@ export default {
 
       login_in_submission: false,
       login_show_alert: false,
-      login_alert_variant: 'color: #c7c7c7;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 black',
-      login_alert_msg: 'Please wait! We are logging you in.',
+      login_alert_variant: 'color: white; background-color:#1a1a1a;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 #1a1a1a4',
+      login_alert_msg: 'Please wait! Insert is in process.',
     }
   },
   methods:{
@@ -170,6 +170,11 @@ export default {
         this.ResponsibleName && 
         this.ClientName
         ){
+
+        this.login_in_submission = true;
+        this.login_show_alert = true;
+
+
         const formData = new FormData();
         
                 
@@ -202,6 +207,9 @@ export default {
           .then(response => {
             // Handle the response from the backend
             console.log('Form submitted successfully', response.data);
+            this.login_in_submission = true;
+            this.login_alert_variant = 'color: white; background-color:#339933; border: 1px solid #339933; box-shadow: 0 0 5px rgba(0,255,0,.3), 0 0 10px rgba(0,255,0,.2), 0 0 15px rgba(0,255,0,.1), 0 1px 0 #339933;';
+            this.login_alert_msg = 'Success! You have inserted new container.';
           })
           .catch(error => {
             // Handle errors
@@ -209,14 +217,13 @@ export default {
             if(error.response.data.detail == 'Could not validate credentials'){
               this.logout()          
             }
-            this.login_in_submission = false;
+            this.login_in_submission = true;
             this.login_alert_variant = 'color: white; background-color:#990000;  border: 1px solid #990000;  box-shadow: 0 0 5px rgba(255,0,0,.3), 0 0 10px rgba(255,0,0,.2), 0 0 15px rgba(255,0,0,.1), 0 1px 0 #990000';
-            this.login_alert_msg = error.detail;
+            this.login_alert_msg = error.response.data.detail;
             return
           });
 
-          this.login_alert_variant = 'color: white; background-color:#339933; border: 1px solid #339933; box-shadow: 0 0 5px rgba(0,255,0,.3), 0 0 10px rgba(0,255,0,.2), 0 0 15px rgba(0,255,0,.1), 0 1px 0 #339933;';
-          this.login_alert_msg = 'Success! You have inserted new post.';
+          
           setTimeout(()=>{
             window.location.reload();
           },5000)
@@ -245,7 +252,7 @@ export default {
   created(){
     console.log(toRaw(this.insertOrUpdateDialogItem))
 
-    console.log(this.insertOrUpdateDialogItem)
+    // console.log(this.insertOrUpdateDialogItem)
   },
   computed: {
     ...mapState(useCounterStore, ['BASE_URL']),

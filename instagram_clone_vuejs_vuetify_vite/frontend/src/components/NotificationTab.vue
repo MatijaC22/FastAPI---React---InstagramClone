@@ -107,8 +107,9 @@ export default{
         });
     },
     async updateNotificationStatus(id){
-      this.updateNotificationReadStatus(id)
+      await this.updateNotificationReadStatus(id)
       this.getNotifications();  
+      
     }
   },
   computed:{

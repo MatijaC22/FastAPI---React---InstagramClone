@@ -25,6 +25,8 @@
               v-bind="props"
               style="margin-bottom:0px;"
               height="42"
+              class="mr-2"
+              v-if="this.$route.fullPath.includes('database')"
             >
               Filter
             </v-btn>
@@ -51,9 +53,8 @@
           color="primary"
           v-bind="props"
           style="margin-bottom:0px;"
-          class="ml-2"
           height="42"
-          @click="this.exportExcel(paginatedItems)"
+          @click="this.exportExcel(this.filteredItems)"
         >
           Download
         </v-btn>         
@@ -93,9 +94,12 @@
   </thead>
     <tbody>
       <tr v-for="(item, index) in paginatedItems" :key="index">
-        <td v-for="(value, key) in item" :key="key" :style="`color: ${key=='last_modify' && isOlderThan30Days(item.lastModify) ? 'red' : 'black'}`">{{ (key.indexOf('last_modify') != (-1) || key.indexOf('created_at')  != (-1)) ? formatDate(value) : value }}</td>
+        <td v-for="(value, key) in item" :key="key" :style="`color: ${key=='last_modify' && isOlderThan30Days(item.last_modify) ? 'red' : 'black'}`">{{ (key.indexOf('last_modify') != (-1) || key.indexOf('created_at')  != (-1)) ? formatDate(value) : value }}</td>
         <td>
-          <router-link :to="name == 'Containers' ? '/post/'+item.tankRef : 'Containers' ? '/user/'+item.id : item.url" class="routerLink" style="color:black;">
+          <div v-if="name == 'CONTAINERS'" @click="copyContainersDetails(item)" style="color:black; cursor:pointer;">
+            Copy
+          </div>
+          <router-link v-if="name == 'EMPLOYES'" :to="'/user/'+item.id" class="routerLink" style="color:black;">
             View
           </router-link>
         </td>
@@ -171,6 +175,10 @@ export default {
   },
   data() {
     return{
+      //VIDI STO S TIM TO SAM STAVIO SAMO DA ZAUSTAVIM WARNINGE
+      props:null,
+      loading:null,
+
       checkboxes: [],
       search: '',
       list: this.dataItems,
@@ -257,6 +265,19 @@ export default {
       const worksheet = XLSX.utils.json_to_sheet(data);
       XLSX.utils.book_append_sheet(workbook, worksheet, "framework")
       XLSX.writeFile(workbook, this.name + '.xlsx')
+    },
+    copyContainersDetails(item){
+      const textToCopy = `Container details: reference_number: ${item.reference_number}; country: ${item.country}; responsible name contact: ${item.responsible_email}; `;
+
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          console.log('Text copied to clipboard');
+          // Optionally, you can show a success message or perform any other action here
+        })
+        .catch((error) => {
+          console.error('Unable to copy text to clipboard:', error);
+          // Optionally, you can show an error message or perform any other action here
+        });
     }
     
   }

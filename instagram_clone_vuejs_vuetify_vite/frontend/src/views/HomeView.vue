@@ -196,7 +196,7 @@ section {
   margin: 0 auto;
   border-radius: 50%;
   position: relative;
-  background-image: url(https://www.freepngimg.com/thumb/clock/33735-6-clock-no-hands-clipart.png);
+  background-image: url(../src/assets/images/clock-no-hands-clipart.png);
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;

@@ -1,3 +1,4 @@
+import math
 from routers.schemas import PostBase, PostInsert
 from sqlalchemy.orm.session import Session
 from db.models import DbPost, DbContainer, DbUser
@@ -69,15 +70,44 @@ def get_all_package(db: Session, current_user:DbUser, user_id=None, page: int = 
         query = db.query(DbPost)
         if user_id:
             query = query.filter(DbPost.user_id == user_id)
+        
+        total_lines = query.count()  # Get the total number of lines
+
         query = query.order_by(DbPost.last_modify.desc()).offset(offset).limit(per_page).all()
-        return query
+        total_pages = math.ceil(total_lines / per_page)  # Calculate the total number of pages
+        return {
+            "lines": total_lines,
+            "pages": total_pages,
+            "page": page,
+            "per_page": per_page,
+            "data": query,
+        }
+        # return query
 
     # IF NOT ADMINISTRATOR
     if not current_user.administrator:
         query = db.query(DbPost).filter(DbPost.user_id == current_user.id)
+        total_lines = query.count()  # Get the total number of lines
         query = query.order_by(DbPost.last_modify.desc()).offset(offset).limit(per_page).all()
-        return query
         
+        total_pages = math.ceil(total_lines / per_page)  # Calculate the total number of pages
+        return {
+            "lines": total_lines,
+            "pages": total_pages,
+            "page": page,
+            "per_page": per_page,
+            "data": query,
+        }
+        # return query
+
+# GORNJA FUNKCIJA RADI TAJ POSAO   
+# def get_user_posts(db: Session, current_user:DbUser, user_id=None, page: int = 1, per_page: int = 10):
+#     offset = (page - 1) * per_page
+
+#     if not current_user.administrator:
+#         query = db.query(DbPost).filter(DbPost.user_id == current_user.id)
+#         query = query.order_by(DbPost.last_modify.desc()).offset(offset).limit(per_page).all()
+#         return query    
 
 def get_one(db: Session, id: int, current_user:DbUser):
     

@@ -9,8 +9,7 @@
             <v-row justify="center" >
               <v-col align-self="start" class="d-flex justify-center align-center pa-0" cols="12">
                 <v-avatar class="profile avatar-center-heigth avatar-shadow" color="grey" size="164">
-                  <input ref="uploader" class="d-none" type="file" accept="image/*" :change="onFileChanged">
-                  <v-img v-if="userData.email != undefiend" :src="this.BASE_URL+'images/users/'+userData.image_url"></v-img>
+                  <v-img v-if="userData.email != undefined" :src="this.BASE_URL+'images/users/'+userData.image_url"></v-img>
                 </v-avatar>
               </v-col>
             </v-row>
@@ -30,7 +29,7 @@
                             <strong>Name:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            {{userData.name.toUpperCase()}}
+                            {{userData.name}}
                           </v-col>
                         </v-row>
                         <v-row v-if="userData.middle_name != ''">
@@ -38,7 +37,7 @@
                             <strong>Middle Name:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            {{userData.middle_name.toUpperCase()}}
+                            {{userData.middle_name}}
                           </v-col>
                         </v-row>
                         <v-row>
@@ -46,7 +45,7 @@
                             <strong>Surname:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            {{userData.last_name.toUpperCase()}}
+                            {{userData.last_name}}
                           </v-col>
                         </v-row>
                         <v-row>
@@ -54,7 +53,7 @@
                             <strong>Date of Birth:</strong>
                           </v-col>
                           <v-col cols="8" sm="10">
-                            {{userData.date_of_birth.toUpperCase()}}
+                            {{userData.date_of_birth}}
                           </v-col>
                         </v-row>
                         <v-row>
@@ -164,6 +163,8 @@ import UserInfoData from '@/components/UserInfoData.vue'
 import { useCounterStore } from '@/stores/counter';
 import { mapState } from 'pinia'
 import { mapActions } from 'pinia'
+import { mapWritableState } from 'pinia'
+
 
   export default {
     components:{
@@ -172,12 +173,28 @@ import { mapActions } from 'pinia'
     },
     data() {
       return{
-        showPosts:true,
+        showPosts:false,
         items: [
           "Info","Posts"
         ],
         postList:[],
-        userData:{}
+        userData:{},
+        page : 0,
+        totalNumberOfLinesGiven: false,
+      }
+    },
+    watch: {
+      $route(to) {
+        const newId = to.params.id;
+        // Fetch user data based on the newId
+        if(/user\/\d+/.test(window.location.pathname)){
+        // if(!isNan(newId)){
+          this.getUserData();
+          this.totalNumberOfLinesGiven = false
+          this.page = 0
+          this.postList = []
+          this.getUserPosts();
+        }
       }
     },
     methods:{
@@ -201,10 +218,38 @@ import { mapActions } from 'pinia'
         const seconds = dateObj.getSeconds();
         return `${year}-${month}-${date}`;
       },
+      handleScroll(){
+        const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
+        const bottomOfWindow = Math.round(scrollTop) + clientHeight === scrollHeight;
+
+        if( bottomOfWindow){
+          console.log('bottom of window')
+          if(!this.totalNumberOfLinesGiven){
+            this.getPosts();
+          }
+        }
+      },
       async getUserPosts(){
         if(this.showPosts){
-          await axios.get(this.BASE_URL + 'post/all',
-            {
+          
+          this.isLoading = true;
+            
+          if(this.pendingRequest){
+            return;
+          }
+
+          this.pendingRequest = true;
+
+          this.page = this.page + 1
+
+          let data = {
+            page : this.page,
+            per_page : 10,
+            user_id : parseInt(window.location.pathname.split('/').pop().replace(/\D/g,'')),
+          }
+
+          await axios.get(this.BASE_URL + 'post/package', {params:data,
+            
               headers: {
                 'Authorization':'Bearer ' + localStorage.getItem('access_token'),
                 'Accept': 'application/json'
@@ -212,43 +257,61 @@ import { mapActions } from 'pinia'
             })
             .then(response => {
               console.log('this is response.', response);
-              this.postList = response.data     
+              // this.postList = response.data  
+              this.postList = this.postList.length ? this.postList.concat(response.data.data) : response.data.data
+              if(response.data.actual_page==response.data.total_number_of_pages){
+                this.totalNumberOfLinesGiven = true
+              }    
             })
             .catch(error => {
               console.error('There was an error:', error.response.data);
-              this.logout() 
+              if(error.response.data.detail == 'Could not validate credentials'){
+                this.logout()          
+              }
             });
+
+            this.pendingRequest = false;
+            this.isLoading = false;
         }
+      },
+      async getUserData(){
+        
+        await axios.get(this.BASE_URL + 'user/'+window.location.pathname.split('/').pop(),
+              {
+                headers: {
+                  'Authorization':'Bearer ' + localStorage.getItem('access_token'),
+                  'Accept': 'application/json'
+                }
+              })
+              .then(response => {
+                console.log('this is user data.', response);
+                this.userData = response.data     
+              })
+              .catch(error => {
+                console.error('There was an error:', error.response.data);
+                if(error.response.data.detail == 'Could not validate credentials'){
+                  this.logout()          
+                }
+              }); 
+        
       },
     },
     computed:{
       ...mapState(useCounterStore, ['BASE_URL']),
+      ...mapWritableState(useCounterStore, ['isLoading']),
+
 
     },
     async created() {
-      const part = this.$route.query.part
-      if (part === 'info') {
-        this.showPosts = false
-      } else {
-        this.showPosts = true
-      }
+            
+      await this.getUserData();  
+      
+      window.addEventListener('scroll', this.handleScroll);
 
-      await axios.get(this.BASE_URL + 'user/'+window.location.pathname.split('/').pop(),
-        {
-          headers: {
-            'Authorization':'Bearer ' + localStorage.getItem('access_token'),
-            'Accept': 'application/json'
-          }
-        })
-        .then(response => {
-          console.log('this is user data.', response);
-          this.userData = response.data     
-        })
-        .catch(error => {
-          console.error('There was an error:', error.response.data);
-          this.logout() 
-        });     
-    }
+    },
+    beforeUnmount(){
+      window.removeEventListener('scroll',this.handleScroll);
+    },
   }
 </script>
 

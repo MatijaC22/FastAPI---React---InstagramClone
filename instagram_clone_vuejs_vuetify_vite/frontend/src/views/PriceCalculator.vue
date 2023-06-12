@@ -45,10 +45,10 @@
  
 
   <!-- height je sada 63.5vh ali treba viit kako to nastimati korektno -->
-  <div style="margin-left:20px;"> {{ formattedTime }} </div>
+  <div v-if="extractionTime != null" style="margin-left:20px; margin-top:5px;"> {{ formattedTime }} - Belgium time</div>
   <v-table
     fixed-header
-    height="63.5vh"
+    height="250px"
     density="compact"
     class="mt-2"
   >
@@ -59,18 +59,34 @@
         :key="index"
       >
         <div>{{ title }}</div>
-        <div>{{title=='name' ? 'USD' : '1'}}</div>
+        <div v-if="title === 'name'" style="display: flex; align-items: center">
+          <img src="../assets/images/us.png" alt="Small Image" style="width: 20px; height: 20px; margin: 5px 5px 5px 2px; border-radius: 50%; "  />
+          <span>USD</span>
+        </div>
+        <div v-else>
+          1
+        </div>        
       </th> 
     </tr>
   </thead>
-    <tbody v-if="filteredItems != null">
+    <tbody v-if="filteredItems != null" style="height:50px;">
       <tr v-for="(rate, index) in filteredItems" :key="index">
-        <td >{{ rate.name }}</td>
+        
+        <td class="ml-2 pl-2"><v-checkbox
+        class="ma-0 pa-0"
+          v-model="rate.option"
+          :label="rate.name"
+          @change="handleCheckboxChange(rate.name, rate.value)"
+          hide-details 
+        ></v-checkbox>
+        <!-- {{ rate.name }} -->
+        </td>
         <td >{{ rate.value }}</td>
       </tr>           
     </tbody>
   </v-table>
 
+  <PriceDefineder :currency="currency" :currencyValue="currencyValue"/>
 
   </v-card>
   </div>
@@ -85,8 +101,13 @@
 import axios from 'axios'
 import { useCounterStore } from '@/stores/counter';
 import { mapState } from 'pinia'
-import { mapActions } from 'pinia'
+import { mapActions } from 'pinia' 
+import PriceDefineder from '@/components/PriceDefineder.vue'
+
 export default {
+  components:{
+    PriceDefineder,
+  },
   data() {
     return{
       props:null,
@@ -96,6 +117,8 @@ export default {
       formattedTime: '',
       filteredList:[],
       search:'',
+      currency: 'USD',
+      currencyValue:1
     }
   },
   methods:{
@@ -109,15 +132,14 @@ export default {
         const parsedData = response.data;
         const ratesObject = parsedData.rates;
         const rateArray = [];
-
+        const option = false
         for (const [name, value] of Object.entries(ratesObject)) {
-          rateArray.push({ name, value });
+          rateArray.push({ name, value, option });
         }
         this.extractionTime = parsedData.timestamp
         this.currencies =  rateArray
-        this.filteredList = this.currencies,
-        console.log(this.currencies)
-        console.log(this.filteredList)
+        this.filteredList = this.currencies
+        // console.log(this.filteredList)
       })
       .catch(error => {
         console.error('There was an error:', error.response.data);
@@ -126,9 +148,31 @@ export default {
         }
       });
       this.timestamp(this.extractionTime);
+
+      this.filteredItems.forEach((rate) => {
+        if (rate.name === this.currency) {
+          
+          rate.option = true;
+          this.currencyValue = rate.value
+        } else {
+          rate.option = false;
+        }
+      });
+      this.filteredList.forEach((rate) => {
+        if (rate.name === this.currency) {
+          rate.option = true;
+          this.currencyValue = rate.value
+        } else {
+          rate.option = false;
+        }
+      });
     },
     timestamp(extractionTime){
       const date = new Date(extractionTime);
+
+      // Add 2 hours to the date
+      date.setHours(date.getHours() + 2);
+
       const options = { 
         year: 'numeric',
         month: 'long',
@@ -143,13 +187,42 @@ export default {
     refreshList(){
       this.getCurrencylist();
       
+      // this.currency = 'USD',
+      // this.currencyValue = null
+      
+    },
+    handleCheckboxChange(name, value){
+      this.filteredItems.forEach((rate) => {
+        if (rate.name === name) {
+          rate.option = !rate.option; // Toggle the checkbox state
+        } else {
+          rate.option = false; // Uncheck other checkboxes
+        }
+      });
+      this.filteredList.forEach((rate) => {
+        if (rate.name === name) {
+          rate.option = !rate.option; // Toggle the checkbox state
+        } else {
+          rate.option = false; // Uncheck other checkboxes
+        }
+      });
+
+      if (name!= this.currency){
+        
+        this.currency = name
+        this.currencyValue = value
+        return
+      }
+      this.currency = 'USD'
+      this.currencyValue = 1
+      
     }
   },
   computed:{
     ...mapState(useCounterStore, ['BASE_URL']),
 
     filteredItems(){
-      console.log(this.search)
+      // console.log(this.search)
       // console.log(this.filteredList)
       return this.filteredList.filter((data) => {
         const values = Object.values(data)

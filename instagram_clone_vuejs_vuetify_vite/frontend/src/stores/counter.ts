@@ -15,7 +15,6 @@ export const useCounterStore = defineStore({
   state: () => ({
     isLoading: false,
 
-    // SAD TESTIRAM SEARCHQUERY
     searchQuery: null,
 
     userLoggedIn: false,
@@ -24,10 +23,9 @@ export const useCounterStore = defineStore({
     setUserId:null,
     setUsername:null,
     tab:null,
-    BASE_URL: 'http://localhost:8000/',
-    // BASE_URL: 'https://f09e-2402-4000-10c4-5e38-51f0-2970-8169-bc6c.ngrok-free.app/api/',
+    // BASE_URL: 'http://localhost:8000/',
+    BASE_URL: 'https://d7b2-219-92-69-253.ngrok-free.app/api/',
     userData:null,
-    testis:5,
   }),
   getters: {
     // setIsLoading: (state:any, status:any) => {
@@ -83,6 +81,7 @@ export const useCounterStore = defineStore({
       this.setUsername = null
       localStorage.removeItem('access_token');
       localStorage.removeItem('email');
+      localStorage.removeItem('userData');
     },
   }
 })

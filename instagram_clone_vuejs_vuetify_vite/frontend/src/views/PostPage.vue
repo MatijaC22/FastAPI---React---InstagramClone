@@ -185,7 +185,7 @@
     @update:insertOrUpdateDialog="insertOrUpdateDialog = $event"
     :insertOrUpdateDialogItem="insertOrUpdateDialogItem"
     @insertOrUpdateItem="handleInsertOrUpdateItem"
-    type="Posts" typeOfDialog="update"
+    type="POSTS" typeOfDialog="update"
   />
 </template>
 

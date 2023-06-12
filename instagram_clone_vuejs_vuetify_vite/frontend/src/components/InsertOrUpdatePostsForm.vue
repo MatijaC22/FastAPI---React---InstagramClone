@@ -72,10 +72,10 @@ export default {
       
       selectedImages: [],
 
-      Title:toRaw(this.insertOrUpdateDialogItem).Title != undefined ? toRaw(this.insertOrUpdateDialogItem).Title : '',
-      Description:toRaw(this.insertOrUpdateDialogItem).Description != undefined ? toRaw(this.insertOrUpdateDialogItem).Description : '',
-      Reference:toRaw(this.insertOrUpdateDialogItem).Reference != undefined ? toRaw(this.insertOrUpdateDialogItem).Reference : '',
-      TitleAlarm:'Enter post title!',
+      // Title:toRaw(this.insertOrUpdateDialogItem).Title != undefined ? toRaw(this.insertOrUpdateDialogItem).Title : '',
+      Description:toRaw(this.insertOrUpdateDialogItem).description != undefined ? toRaw(this.insertOrUpdateDialogItem).description : '',
+      Reference:toRaw(this.insertOrUpdateDialogItem).reference_number != undefined ? toRaw(this.insertOrUpdateDialogItem).reference_number : '',
+      // TitleAlarm:'Enter post title!',
       DescriptionAlarm:'Enter post description!',
       ReferenceAlarm:'Enter post reference!',
       
@@ -86,8 +86,8 @@ export default {
 
       login_in_submission: false,
       login_show_alert: false,
-      login_alert_variant: 'color: #c7c7c7;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 black',
-      login_alert_msg: 'Please wait! We are logging you in.',
+      login_alert_variant: 'color: white; background-color:#1a1a1a;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 #1a1a1a4',
+      login_alert_msg: 'Please wait! Insert is in process.',
     }
   },
   methods:{
@@ -98,13 +98,11 @@ export default {
     },
     async submitData(values){
 
-      this.login_in_submission = true;
-      this.login_show_alert = true;
-      this.login_alert_variant = 'color: white; background-color:#1a1a1a;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 #1a1a1a4';
-      this.login_alert_msg = 'Please wait! We are logging you in.';
-
       
       if(this.Reference && this.Description){
+        
+        this.login_in_submission = true;
+        this.login_show_alert = true;
         
         const formData = new FormData();
         
@@ -169,7 +167,7 @@ export default {
   created(){
     console.log(toRaw(this.insertOrUpdateDialogItem))
 
-    console.log(this.insertOrUpdateDialogItem)
+    // console.log(this.insertOrUpdateDialogItem)
   },
   computed: {
     ...mapState(useCounterStore, ['BASE_URL']),

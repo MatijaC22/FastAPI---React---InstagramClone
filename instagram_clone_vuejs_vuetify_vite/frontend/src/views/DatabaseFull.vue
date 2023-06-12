@@ -20,6 +20,7 @@ import DataTable from '@/components/DataTable.vue'
 import { useCounterStore } from '@/stores/counter';
 import { mapWritableState } from 'pinia'
 import { mapState } from 'pinia'
+import { mapActions } from 'pinia'
 
 export default {
   components:{
@@ -29,131 +30,6 @@ export default {
     return{
       list:[],
       headers:[],
-      // containersListHeaders:['Reference','lastModify','Location','Country','ResponsableName','ClientName','TransportType','ProductType','View','Action'],
-    //   containersListHeaders:[],
-    // containersList: [
-    //   {
-    //     Reference:'3224301',
-    //     lastModify:'15/10/2023',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224302',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224303',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224304',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224305',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224306',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224307',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224308',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224309',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224310',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224311',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   },
-    //   {
-    //     Reference:'3224312',
-    //     lastModify:'15/10/2021',
-    //     Location:'San Sebastion',
-    //     Country:'Guatemala',
-    //     ResponsableName:'Ivan Sen',
-    //     ClientName:'Sin Xaio Hel',
-    //     TransportType:'Sea',
-    //     ProductType:'Oil',
-    //   }
-
-    // ],
     }
   },
   computed:{
@@ -162,6 +38,7 @@ export default {
 
   },
   methods:{
+    ...mapActions(useCounterStore, ['logout']),
     async ajaxCallEmployes(){
       this.isLoading = true
       await axios.get(this.BASE_URL + 'user/all',
@@ -237,17 +114,5 @@ export default {
       }
     }
   },
-  async created(){
-    // this.$watch('$route.params', (newParams, oldParams) => {
-    //   // Handle the parameter changes
-    //   console.log('New params:', newParams);
-    //   console.log('Old params:', oldParams);
-
-    //   // Perform any necessary actions based on the parameter changes
-    //   // For example, update data or fetch new data from an API
-    // }, { deep: true });
-
-    
-    }
 }
 </script>

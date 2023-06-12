@@ -131,6 +131,12 @@ class PostDisplay(BaseModel):
     class Config():
         orm_mode = True
 
+class PackageResponse(BaseModel):
+    lines: int
+    total_number_of_pages: int
+    lines_per_page: int
+    actual_page: int
+    data: List[PostDisplay]
 
 # NEZNAM STO CE MI TO
 class UserAuth(BaseModel):
@@ -173,7 +179,6 @@ class NotificationBase(BaseModel):
     message: str
 
 
-#STAO SAM OVDJE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 class NotificationDisplay(BaseModel):
     id: int
     comment_owner_id: int
@@ -190,3 +195,5 @@ class NotificationDisplay(BaseModel):
     post: PostDisplay
     class Config():
         orm_mode = True
+
+

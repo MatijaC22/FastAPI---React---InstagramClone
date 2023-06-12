@@ -13,8 +13,13 @@ const router = createRouter({
     {
       path: '/postsList',
       name: 'postsList',
-      component: () => import(/* webpackChunkName: "Posts" */ '../views/PostsList.vue')
+      component: () => import(/* webpackChunkName: "Posts" */ '../views/PostsList.vue'),
       // component: PostsList
+    },
+    {
+      path: '/postsListSearch',
+      name: 'postsListSearch',
+      component: () => import(/* webpackChunkName: "PostsSearch" */ '../views/PostsListSearch.vue'),
     },
     {
       path: '/dataList',

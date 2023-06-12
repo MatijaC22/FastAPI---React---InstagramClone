@@ -43,12 +43,14 @@ export default defineComponent({
   data(){
     return{
       postList:[],
-      pendingRequest: false
+      pendingRequest: false,
+      page:0,
+      totalNumberOfLinesGiven:false,
     }
   },
   computed:{
     ...mapState(useCounterStore, ['BASE_URL']),
-    ...mapWritableState(useCounterStore, ['isLoading']),
+    ...mapWritableState(useCounterStore, ['isLoading', 'searchQuery']),
 
   },
   async created(){
@@ -68,7 +70,9 @@ export default defineComponent({
 
       if( bottomOfWindow){
         console.log('bottom of window')
-        this.getPosts();
+        if(!this.totalNumberOfLinesGiven){
+          this.getPosts();
+        }
       }
     },
     async getPosts(){
@@ -81,29 +85,39 @@ export default defineComponent({
 
       this.pendingRequest = true;
 
-      await axios.get(this.BASE_URL + 'post/package',
-        {
+      this.page = this.page + 1
+
+      let data = {
+        page : this.page,
+        per_page : 1,
+        // user_id:1
+      }
+
+      await axios.get(this.BASE_URL + 'post/package',{params:data,
+        
           headers: {
             'Authorization':'Bearer ' + localStorage.getItem('access_token'),
             'Accept': 'application/json'
           }
-        })
-        .then(response => {
+      })
+      .then(response => {
           console.log('this is response.', response);
-          this.postList = response.data     
-        })
-        .catch(error => {
+          this.postList = this.postList.length ? this.postList.concat(response.data.data) : response.data.data
+          if(response.data.actual_page==response.data.total_number_of_pages){
+            this.totalNumberOfLinesGiven = true
+          }   
+      })
+      .catch(error => {
           console.error('There was an error:', error.response.data);
           if(error.response.data.detail == 'Could not validate credentials'){
             this.logout()          
           }
-        });
+      });
 
-        this.pendingRequest = false;
-        this.isLoading = false;
-      }
-  }
-      
+      this.pendingRequest = false;
+      this.isLoading = false;
+    }
+  },      
 })
 </script>
 

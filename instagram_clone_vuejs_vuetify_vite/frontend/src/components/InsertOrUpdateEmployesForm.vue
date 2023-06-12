@@ -148,8 +148,8 @@ export default {
 
       login_in_submission: false,
       login_show_alert: false,
-      login_alert_variant: 'color: #c7c7c7;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 black',
-      login_alert_msg: 'Please wait! We are logging you in.',
+      login_alert_variant: 'color: white; background-color:#1a1a1a;  border: 1px solid #1a1a1a; box-shadow:0 0 5px rgba(52, 152, 219, .3), 0 0 10px rgba(52, 152, 219, .2), 0 0 15px rgba(52, 152, 219, .1), 0 1px 0 #1a1a1a4',
+      login_alert_msg: 'Please wait! Employ is getting inserted.',
     }
   },
   methods:{
@@ -160,6 +160,10 @@ export default {
     },
     async submitData(values){
       if(this.Position && this.Name && this.DateOfBirth && this.LastName && this.Email && this.Password){
+
+        this.login_in_submission = true;
+        this.login_show_alert = true;
+
         const formData = new FormData();
         
         for (let i = 0; i < this.selectedImages.length; i++) {
@@ -197,6 +201,9 @@ export default {
           .then(response => {
             // Handle the response from the backend
             console.log('Form submitted successfully', response.data);
+            this.login_in_submission = true;
+            this.login_alert_variant = 'color: white; background-color:#339933; border: 1px solid #339933; box-shadow: 0 0 5px rgba(0,255,0,.3), 0 0 10px rgba(0,255,0,.2), 0 0 15px rgba(0,255,0,.1), 0 1px 0 #339933;';
+            this.login_alert_msg = 'Success! You have inserted new employ.';
           })
           .catch(error => {
             // Handle errors
@@ -204,14 +211,13 @@ export default {
             if(error.response.data.detail == 'Could not validate credentials'){
               this.logout()          
             }
-            this.login_in_submission = false;
+            this.login_in_submission = true;
             this.login_alert_variant = 'color: white; background-color:#990000;  border: 1px solid #990000;  box-shadow: 0 0 5px rgba(255,0,0,.3), 0 0 10px rgba(255,0,0,.2), 0 0 15px rgba(255,0,0,.1), 0 1px 0 #990000';
-            this.login_alert_msg = error.detail;
+            this.login_alert_msg = error.response.data.detail;
             return
           });
 
-          this.login_alert_variant = 'color: white; background-color:#339933; border: 1px solid #339933; box-shadow: 0 0 5px rgba(0,255,0,.3), 0 0 10px rgba(0,255,0,.2), 0 0 15px rgba(0,255,0,.1), 0 1px 0 #339933;';
-          this.login_alert_msg = 'Success! You have inserted new post.';
+          
           setTimeout(()=>{
             window.location.reload();
           },5000)
@@ -237,7 +243,7 @@ export default {
     }
   },
   created(){
-          // console.log(toRaw(this.insertOrUpdateDialogItem))
+          console.log(toRaw(this.insertOrUpdateDialogItem))
 
     // console.log(this.insertOrUpdateDialogItem)
   },
@@ -259,7 +265,31 @@ export default {
       //   }
       // }
       );
-    }
+    },
+    formattedDateOfBirth: {
+      get() {
+        if (this.DateOfBirth) {
+          const date = new Date(this.DateOfBirth);
+          const year = date.getFullYear();
+          const month = ('0' + (date.getMonth() + 1)).slice(-2); // add leading zero for month
+          const day = ('0' + date.getDate()).slice(-2); // add leading zero for day
+          return `${year}-${month}-${day}`;
+        }
+        return null;
+      },
+      // set(value) {
+      //   if (value) {
+      //     const parts = value.split('-');
+      //     const year = parseInt(parts[0], 10);
+      //     const month = parseInt(parts[1], 10) - 1; // subtract 1 from month since it's zero-based
+      //     const day = parseInt(parts[2], 10);
+      //     const date = new Date(year, month, day);
+      //     this.DateOfBirth = date.toISOString().substr(0, 10);
+      //   } else {
+      //     this.DateOfBirth = null;
+      //   }
+      // },
+    },
   }
 }
 </script>

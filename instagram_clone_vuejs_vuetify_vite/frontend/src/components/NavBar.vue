@@ -2,7 +2,7 @@
   <v-app-bar
     app
     color="teal-darken-4"
-    image="https://picsum.photos/1920/1080?random"
+    image="../src/assets/images/navbarBackground.jpg"
     fixed
   >
     <template v-slot:image>
@@ -15,7 +15,7 @@
 
     <v-avatar image="../src/assets/images/antaresWebp.webp" size="41" style="margin-left:10px;"></v-avatar>
 
-    <v-app-bar-title>ANTARES PROGRAMMING</v-app-bar-title>
+    <!-- <v-app-bar-title>ANTARES PROGRAMMING</v-app-bar-title> -->
 
     <v-tabs
       v-model="tab"
@@ -48,7 +48,7 @@
           </v-list>
         </v-menu>
       </v-tab>
-      <v-tab :value="3"  id="menu-activator">
+      <v-tab :value="3"  id="menu-activator" v-if="userData.administrator">
         Data
         <v-menu activator="#menu-activator" > 
           <v-list style="border-top-left-radius: 0; border-top-right-radius: 0;">
@@ -63,7 +63,7 @@
           </v-list>
         </v-menu>
       </v-tab>
-      <router-link to="/PriceCalculator" class="routerLink">
+      <router-link to="/PriceCalculator" class="routerLink" v-if="userData.administrator">
         <v-tab :value="4">
           Calculate
         </v-tab>
@@ -81,7 +81,7 @@
       :loading="loading"
       density="compact"
       variant="solo"
-      label="Search by reference number"
+      label="Search Posts"
       append-inner-icon="mdi-magnify"
       single-line
       hide-details
@@ -97,7 +97,7 @@
     </div>
 
     <!-- USER INFO FALLING TAB -->
-    <div class="overflow-y-visible">
+    <div class="overflow-y-visible mr-1">
       <v-menu>
         <template v-slot:activator="{ props }">
           <v-btn icon v-bind="props" @click.stop="drawer = !drawer; searchBarVisible=false;">
@@ -109,15 +109,14 @@
         <v-list>
           <v-list-item
             :prepend-avatar="this.BASE_URL+'images/users/'+userData.image_url"
-            :title="this.userData.name.toUpperCase()+' '+this.userData.last_name.toUpperCase()"
-            :to="`/user/${userData.id}?part=info`"
+            :title="userData.name.toUpperCase()+' '+userData.last_name.toUpperCase()"
           ></v-list-item>
 
           <v-divider></v-divider>
   
           <v-list density="compact" nav>
-            <v-list-item :to="`/user/${userData.id}?part=info`" prepend-icon="mdi-view-dashboard" title="User Info" value="User Info"></v-list-item>
-            <v-list-item :to="`/user/${userData.id}?part=posts`" prepend-icon="mdi-forum" title="User Posts" value="User Posts"></v-list-item>
+            <v-list-item :to="`/user/${userData.user_id}?part=info`" prepend-icon="mdi-view-dashboard" title="More Info" value="User Info"></v-list-item>
+            <!-- <v-list-item :to="`/user/${userData.user_id}?part=posts`" prepend-icon="mdi-forum" title="User Posts" value="User Posts"></v-list-item> -->
             <v-list-item title="Language" value="Language">
               <template v-slot:prepend>
                 <v-avatar image="../src/assets/images/ES.png" size="24" class="mr-8"></v-avatar>
@@ -137,7 +136,7 @@
     :loading="loading"
     density="compact"
     variant="solo"
-    label="Search"
+    label="Search Posts"
     append-inner-icon="mdi-magnify"
     class="search-bar"
     single-line
@@ -157,8 +156,24 @@
   >
     <v-list v-model:opened="open">
       <v-list-item prepend-icon="mdi-home" title="Home" to="/"></v-list-item>
-      <v-list-item prepend-icon="mdi-account-multiple-outline" title="Posts" to="/postsList"></v-list-item>
-      <v-list-group value="Data">
+      
+      <v-list-group value="Posts" >
+        <template v-slot:activator="{ props }">
+          <v-list-item
+            v-bind="props"
+            prepend-icon="mdi-account-multiple-outline"
+            title="Posts"
+          ></v-list-item>
+        </template>
+
+        <v-list-item prepend-icon="mdi-view-dashboard" title="Posts" to="/postsList"></v-list-item>
+        <v-list-item prepend-icon="mdi-plus-outline" title="Insert" @click="this.showInsertOrUpdateDialog({}, 'insert')"></v-list-item>
+
+          
+      </v-list-group>
+
+
+      <v-list-group value="Data" v-if="userData.administrator">
         <template v-slot:activator="{ props }">
           <v-list-item
             v-bind="props"
@@ -185,10 +200,9 @@
           ></v-list-item>
         </v-list-group>
         <v-list-item title="Latest" to="/DataList"/>
-
-
       </v-list-group>
-      <v-list-item prepend-icon="mdi-plus" title="Calculate" to="/PriceCalculator"></v-list-item>
+
+      <v-list-item prepend-icon="mdi-plus" title="Calculator" to="/PriceCalculator" v-if="userData.administrator"></v-list-item>
     </v-list>  
   </v-navigation-drawer>
 
@@ -227,6 +241,8 @@ export default defineComponent({
       insertOrUpdateDialog: false,
       insertOrUpdateDialogItem:{},
 
+      // SAMO ZA TEST MAKNI TO KAD RJESIS BEFORE ROUTE PROBLEM
+      searchResults:[],
 
       searchBarVisible: false,
       drawer: null,
@@ -236,7 +252,6 @@ export default defineComponent({
       loading: false,
       userData:JSON.parse(localStorage.getItem('userData')),
       search:'',
-      test:[],
       open: ['Users'],
       data: [
         ['Containers', 'mdi-file-outline', '/database/containers'],
@@ -250,7 +265,7 @@ export default defineComponent({
         },
         {
           title: 'Posts',
-          value: '/PostsList',
+          value: '/postsList',
           icon: 'mdi-account-multiple-outline'
         },
         {
@@ -279,7 +294,7 @@ export default defineComponent({
       navBarDataPosts: [
         {
           title: 'ALL',
-          value: '/PostsList',
+          value: '/postsList',
           icon: 'mdi-folder'
         },
       ],
@@ -310,7 +325,8 @@ export default defineComponent({
         })
         .then(response => {
           console.log('this is search.', response);
-          this.test = response.data  
+          this.searchQuery = response.data
+          this.$router.push('/postsListSearch');
         })
         .catch(error => {
           console.error('There was an error:', error.response.data);
@@ -337,7 +353,9 @@ export default defineComponent({
       'setAuthToken',
       'setAuthTokenType',
       'setUserId',
-      'setUsername'
+      'setUsername',
+
+      'searchQuery'
     ]),
   },
 })

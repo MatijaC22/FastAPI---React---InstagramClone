@@ -1,6 +1,6 @@
 import os
 from fastapi import APIRouter, Depends, Form, status, UploadFile, File
-from routers.schemas import PostBase, PostDisplay
+from routers.schemas import PostBase, PostDisplay, PackageResponse
 from sqlalchemy.orm.session import Session
 from db.database import get_db
 from db import db_post
@@ -17,9 +17,18 @@ router = APIRouter(
 def posts(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
    return db_post.get_all(db, current_user)
 
-@router.get('/package', response_model=List[PostDisplay])
+@router.get('/package', response_model=PackageResponse)
 def posts(page: int = 1, per_page: int = 10, user_id: Optional[int] = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-   return db_post.get_all_package(db, current_user, user_id, page, per_page)
+   result = db_post.get_all_package(db, current_user, user_id, page, per_page)
+   total_lines = result.get('lines')
+   total_pages = result.get('pages')
+   lines_per_page = result.get('per_page')
+   actual_page = result.get('page')
+   data = result.get('data')
+   print(data)
+
+   return PackageResponse(lines=total_lines, total_number_of_pages=total_pages, actual_page=actual_page, lines_per_page=lines_per_page, data=data)
+   # return db_post.get_all_package(db, current_user, user_id, page, per_page)
 
 @router.post("/create")
 def submit_form(
